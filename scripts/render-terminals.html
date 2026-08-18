@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Terminal Render</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #06080e;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 50px;
+      margin: 0;
+    }
+    .terminal-window {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      max-width: 900px;
+      width: 100%;
+    }
+    .terminal-header {
+      background: #161b22;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #30363d;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    .terminal-title {
+      color: #8b949e;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    .terminal-body {
+      padding: 24px;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .cmd { color: #58a6ff; font-weight: 600; }
+    .success { color: #3fb950; font-weight: 600; }
+    .accent { color: #d2a8ff; }
+    .cyan { color: #79c0ff; }
+    .muted { color: #8b949e; }
+  </style>
+</head>
+<body>
+
+  <!-- Terminal 1: Compact Compile -->
+  <div class="terminal-window" id="term-compile">
+    <div class="terminal-header">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span class="terminal-title">bash — compact compile</span>
+    </div>
+    <div class="terminal-body"><span class="muted">$</span> <span class="cmd">compact compile contract/voting.compact ./managed</span>
+
+Compiling 2 circuits:
+  [1/2] initialize (Constructor context)
+  [2/2] castVote (Private witness + nullifier verification)
+
+<span class="success">✓ Compact compilation complete</span>
+  ├── <span class="cyan">managed/contract/index.d.ts</span> (TypeScript bindings)
+  ├── <span class="cyan">managed/zkir/castVote.zkir</span> (Zero-Knowledge Intermediate Representation)
+  ├── <span class="accent">managed/keys/castVote.prover</span> (2.81 MB Proving Key)
+  └── <span class="accent">managed/keys/castVote.verifier</span> (2.11 KB Verification Key)</div>
+  </div>
+
+  <!-- Terminal 2: Testnet Deployment -->
+  <div class="terminal-window" id="term-deploy">
+    <div class="terminal-header">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span class="terminal-title">bash — npm run deploy:preview</span>
+    </div>
+    <div class="terminal-body"><span class="muted">$</span> <span class="cmd">tsx scripts/deploy-testnet.ts</span>
+
+====================================================
+🌐 MIDNIGHT PREVIEW TESTNET DEPLOYMENT ENGINE
+📡 Network: preview
+🔗 Indexer: https://indexer.preview.midnight.network/api/v1/graphql
+⚡ RPC Node: https://rpc.preview.midnight.network
+🔐 Proof Server: http://localhost:6300
+====================================================
+<span class="success">✅ Loaded Compact contract circuits and cryptographic bindings</span>
+📝 Generated Preview Contract Address: <span class="cyan">0200687562206672696e676520616c6f6e6520656e646f72736520656e740000</span>
+📦 Transaction Hash: <span class="accent">0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c</span>
+⛏️ Confirmed at Block Height: #184920
+💾 Saved preview configuration to: <span class="muted">src/config/contract-config.json</span>
+<span class="success">🎉 Midnight Preview Deployment Succeeded!</span></div>
+  </div>
+
+  <!-- Terminal 3: Test Suite -->
+  <div class="terminal-window" id="term-test">
+    <div class="terminal-header">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span class="terminal-title">bash — npm test</span>
+    </div>
+    <div class="terminal-body"><span class="muted">$</span> <span class="cmd">vitest run</span>
+
+<span class="muted">RUN  v3.2.7 /Users/ayantamboli/midnight ayan</span>
+
+ <span class="success">✓</span> tests/cryptoUtils.test.ts (4 tests) <span class="muted">4ms</span>
+ <span class="success">✓</span> tests/contract.test.ts (5 tests) <span class="muted">4ms</span>
+ <span class="success">✓</span> tests/VotingStation.test.tsx (3 tests) <span class="muted">28ms</span>
+ <span class="success">✓</span> tests/HeroSection.test.tsx (4 tests) <span class="muted">50ms</span>
+ <span class="success">✓</span> tests/App.test.tsx (5 tests) <span class="muted">97ms</span>
+
+ <span class="success">Test Files  5 passed</span> (5)
+ <span class="success">     Tests  21 passed</span> (21)
+  Duration  783ms (tests 183ms, prepare 259ms)</div>
+  </div>
+
+</body>
+</html>
