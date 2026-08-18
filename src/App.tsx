@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
+import { HeroSection } from './components/HeroSection';
 import { PrivacyVisualizer } from './components/PrivacyVisualizer';
 import { VotingStation } from './components/VotingStation';
 import { LedgerTallyView } from './components/LedgerTallyView';
@@ -9,7 +10,7 @@ import { walletConnector } from './services/walletConnector';
 import { contractService } from './services/contractService';
 import { generateVoterSecret, deriveNullifierHash } from './services/cryptoUtils';
 import { Candidate, VoterState, WalletState, ProofStep, ElectionLedgerState } from './types';
-import { Shield, CheckCircle, AlertCircle, Info, Radio } from 'lucide-react';
+import { CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 const CANDIDATES: Candidate[] = [
   {
@@ -59,6 +60,8 @@ export const App: React.FC = () => {
     type: 'success' | 'error' | 'info';
     message: string;
   } | null>(null);
+
+  const dAppSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Initialize voter secret and sync state
   useEffect(() => {
@@ -149,6 +152,12 @@ export const App: React.FC = () => {
     });
   };
 
+  const handleScrollToDApp = () => {
+    if (dAppSectionRef.current) {
+      dAppSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const handleCastBallot = async () => {
     if (!wallet.isConnected) {
       setNotification({
@@ -197,15 +206,34 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#070a10] text-zinc-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
-      {/* Top Header */}
-      <Header
-        wallet={wallet}
-        onConnect={handleConnectWallet}
-        onDisconnect={handleDisconnectWallet}
-        onResetDemo={handleResetDemo}
-        isSyncing={isSyncing}
+    <div className="min-h-screen bg-[#0a0a0f] text-zinc-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
+      {/* 1. Xero Landing Hero Section */}
+      <HeroSection
+        brandName="Xero"
+        title="The simple way"
+        titleAccent="encryption your data"
+        subtitle="Fully managed data encrypting service and annotation platform for teams of all industries."
+        ctaText="Get Started"
+        isLoggedIn={wallet.isConnected}
+        userAddress={wallet.address}
+        onLogin={wallet.isConnected ? handleDisconnectWallet : handleConnectWallet}
+        onSignup={handleConnectWallet}
+        onGetStarted={handleScrollToDApp}
+        onMethodClick={handleScrollToDApp}
+        onPricingClick={handleScrollToDApp}
+        onDocsClick={() => window.open('https://docs.midnight.network', '_blank')}
       />
+
+      {/* 2. Top Header for Live Testnet Telemetry */}
+      <div id="dapp-section" ref={dAppSectionRef} className="scroll-mt-6">
+        <Header
+          wallet={wallet}
+          onConnect={handleConnectWallet}
+          onDisconnect={handleDisconnectWallet}
+          onResetDemo={handleResetDemo}
+          isSyncing={isSyncing}
+        />
+      </div>
 
       {/* Notifications */}
       {notification && (
@@ -239,7 +267,7 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Main Content Area */}
+      {/* Main DApp Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 space-y-6">
         {/* Network & Protocol Status Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#0e131f] border border-zinc-800/80 rounded-xl">
