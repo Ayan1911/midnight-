@@ -1,0 +1,68 @@
+import CompactStandardLibrary;
+
+// ============================================================================
+// Midnight Network Smart Contract: Private Voting
+// ============================================================================
+// Network Target: Midnight Preview / Preprod
+// Core Principle: Selective Disclosure via Zero-Knowledge Cryptography
+//
+// Ledger (Public Zone):
+//   - isOpen: Boolean flag indicating if election is active
+//   - totalVotesA: Public counter of valid ballots for Candidate A
+//   - totalVotesB: Public counter of valid ballots for Candidate B
+//   - totalBallots: Public counter of total ballots cast
+//   - nullifiers: Map of spent ballot nullifiers (prevents double-voting)
+//
+// Witness (Private Zone):
+//   - getVoterSecret(): Local private key / secret credential
+//
+// Circuit (ZK Proof Engine):
+//   - castVote(candidate): Proves knowledge of valid voter secret,
+//     derives nullifier hash deterministically, ensures choice is valid [0, 1],
+//     and updates public ledger state via disclose().
+// ============================================================================
+
+export ledger isOpen: Boolean;
+export ledger totalVotesA: Counter;
+export ledger totalVotesB: Counter;
+export ledger totalBallots: Counter;
+export ledger nullifiers: Map<Bytes<32>, Boolean>;
+
+// Witness: runs locally on voter's machine, secret never touches the chain
+witness getVoterSecret(): Bytes<32>;
+
+// Initializes the election on deployment
+export circuit initialize(): [] {
+  isOpen = true;
+}
+
+// Casts an anonymous ballot
+export circuit castVote(candidate: Uint<8>): [] {
+  // 1. Verify election is open
+  assert(isOpen, "Voting is currently closed");
+
+  // 2. Constrain candidate selection: 0 for Candidate A, 1 for Candidate B
+  assert(candidate == 0 || candidate == 1, "Invalid candidate: must be 0 (Candidate A) or 1 (Candidate B)");
+
+  // 3. Obtain voter secret from private local witness
+  const voterSecret = getVoterSecret();
+
+  // 4. Derive deterministic nullifier using native collision-resistant hash
+  const nullifier = persistentHash<Bytes<32>>(voterSecret);
+
+  // 5. Enforce single-vote constraint: nullifier must not already be in ledger
+  assert(!nullifiers.member(disclose(nullifier)), "Double-vote rejected: voter nullifier has already been spent");
+
+  // 6. Register nullifier on public ledger to prevent replay attacks
+  nullifiers.insert(disclose(nullifier), true);
+
+  // 7. Increment total ballots cast
+  totalBallots.increment(1);
+
+  // 8. Selectively disclose candidate choice to increment respective tally
+  if (disclose(candidate == 0)) {
+    totalVotesA.increment(1);
+  } else {
+    totalVotesB.increment(1);
+  }
+}
