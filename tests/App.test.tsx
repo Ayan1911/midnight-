@@ -1,50 +1,50 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
-import { App } from '../src/App';
+import App from '../src/App';
 
-describe('Midnight VoteZK Frontend UI (Preview Testnet)', () => {
+describe('Midnight Private Voting dApp (App Component)', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it('renders the header with Preview testnet badge', () => {
+  it('renders navbar brand with Preprod badge', () => {
     render(<App />);
-    expect(screen.getByText('Midnight VoteZK')).toBeInTheDocument();
-    expect(screen.getByText('Preview Testnet')).toBeInTheDocument();
-    expect(screen.getByText('Connect Lace')).toBeInTheDocument();
+    expect(screen.getByText('Midnight Voting')).toBeInTheDocument();
+    expect(screen.getByText('Preprod')).toBeInTheDocument();
+    expect(screen.getByText('Connect Lace Wallet')).toBeInTheDocument();
   });
 
-  it('renders the 3-Zone Architecture visualizer', () => {
+  it('renders hero title and subtitle', () => {
     render(<App />);
-    expect(screen.getByText(/1. Witness \(Client RAM\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/2. Circuit \(ZK Prover\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/3. Ledger \(Midnight Preview\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Private Ballots/i)).toBeInTheDocument();
+    expect(screen.getByText(/Verifiable On-Chain Tallies/i)).toBeInTheDocument();
   });
 
-  it('renders candidate options for anonymous ballot selection', () => {
+  it('renders candidate options in VotingStation', () => {
     render(<App />);
-    const proposalElementsA = screen.getAllByText(/Option 0: ZK Privacy Standard/i);
-    const proposalElementsB = screen.getAllByText(/Option 1: Shielded DeFi AMM/i);
-    expect(proposalElementsA.length).toBeGreaterThan(0);
-    expect(proposalElementsB.length).toBeGreaterThan(0);
+    const alphaElements = screen.getAllByText('Candidate Alpha');
+    const betaElements = screen.getAllByText('Candidate Beta');
+    expect(alphaElements.length).toBeGreaterThan(0);
+    expect(betaElements.length).toBeGreaterThan(0);
   });
 
-  it('connects Lace wallet session and displays account controls', async () => {
+  it('connects Lace wallet and displays address pill', async () => {
     render(<App />);
-    const connectButton = screen.getByText('Connect Lace');
+    const connectButton = screen.getByText('Connect Lace Wallet');
     fireEvent.click(connectButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Disconnect/i)).toBeInTheDocument();
+      const addressElements = screen.getAllByText(/0xMid9/i);
+      expect(addressElements.length).toBeGreaterThan(0);
     });
   });
 
-  it('allows candidate selection switching', () => {
+  it('renders trust badges', () => {
     render(<App />);
-    const candidateCards = screen.getAllByText(/Option 1: Shielded DeFi AMM/i);
-    fireEvent.click(candidateCards[0]);
-
-    expect(candidateCards[0]).toBeInTheDocument();
+    expect(screen.getByText('Zero-Knowledge Proofs')).toBeInTheDocument();
+    expect(screen.getByText('Selective Disclosure')).toBeInTheDocument();
+    expect(screen.getByText('Midnight Preprod')).toBeInTheDocument();
+    expect(screen.getByText('Lace Beta Wallet')).toBeInTheDocument();
   });
 });
