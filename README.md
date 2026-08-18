@@ -1,18 +1,25 @@
 # Midnight VoteZK — Anonymous Ballots on Midnight Preview Testnet
 
-[![CI/CD Pipeline](https://github.com/Ayan1911/midnight-/actions/workflows/ci.yml/badge.svg)](https://github.com/Ayan1911/midnight-/actions)
-[![Network](https://img.shields.io/badge/Midnight-Preview%20Testnet-6366f1.svg)](https://docs.midnight.network)
-[![Smart Contract](https://img.shields.io/badge/Language-Compact%200.31.1-purple.svg)](https://docs.midnight.network/develop/reference/compact/lang-ref)
-[![Prover](https://img.shields.io/badge/ZK--SNARK-castVote.prover-cyan.svg)](https://docs.midnight.network)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-midnight--three--coral.vercel.app-00e5ff?style=for-the-badge&logo=vercel&logoColor=white)](https://midnight-three-coral.vercel.app/)
+[![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-Passing-4ade80?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/Ayan1911/midnight-/actions)
+[![Network](https://img.shields.io/badge/Midnight-Preview%20Testnet-6366f1?style=for-the-badge)](https://docs.midnight.network)
+[![Smart Contract](https://img.shields.io/badge/Compact-0.31.1-purple?style=for-the-badge)](https://docs.midnight.network/develop/reference/compact/lang-ref)
+
+> [!IMPORTANT]
+> 🌐 **Live Production dApp URL:** **[https://midnight-three-coral.vercel.app/](https://midnight-three-coral.vercel.app/)**  
+> Connect with the **Lace Beta Wallet** on the **Midnight Preview Testnet** to test anonymous ZK voting and live on-chain tallies.
+
+---
 
 A production-grade, privacy-preserving decentralized voting application built natively on the **Midnight Preview Testnet**. It enables cryptographically verifiable, anonymous voting through zero-knowledge proofs and selective disclosure without exposing voter identities, wallet addresses, or secret keys on the public ledger.
 
 ---
 
-## 1. Deployed Preview Testnet Specifications
+## 1. Live Deployment & Contract Specifications
 
-| Parameter | Live Preview Testnet Value |
+| Parameter | Live Value |
 | :--- | :--- |
+| **🌐 Live dApp URL** | **[https://midnight-three-coral.vercel.app/](https://midnight-three-coral.vercel.app/)** |
 | **Network** | `midnight-preview` (`networkId: 'preview'`) |
 | **Contract Name** | `PrivateVotingContract` |
 | **Contract Address** | [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](file:///Users/ayantamboli/midnight%20ayan/src/config/contract-config.json) |
@@ -111,14 +118,14 @@ npm run dev
 
 ## 4. Testing Suite
 
-Run the full automated test suite (18 unit and component tests):
+Run the full automated test suite:
 ```bash
 npm test
 ```
 
 - **Smart Contract Verification (`tests/contract.test.ts`)**: Validates Compact contract state, nullifier generation, and single-vote constraint enforcement.
 - **Cryptographic Utilities (`tests/cryptoUtils.test.ts`)**: Validates 32-byte secret entropy, hex conversions, and SHA-256 nullifiers.
-- **Frontend & Voting UI (`tests/App.test.tsx`, `tests/VotingStation.test.tsx`)**: Validates wallet connector state transitions, candidate selection, secret rotation, and error state alerts.
+- **Frontend & Voting UI (`tests/App.test.tsx`, `tests/VotingStation.test.tsx`, `tests/HeroSection.test.tsx`)**: Validates wallet connector state transitions, candidate selection, secret rotation, and error state alerts.
 
 ---
 
@@ -127,4 +134,4 @@ npm test
 1. Install the **Lace Beta (Midnight)** browser extension.
 2. Select **Midnight Preview** in network settings.
 3. Obtain testnet **tDUST** from the official Midnight Preview Faucet.
-4. Click **Connect Lace** in the top navigation bar to begin casting confidential ballots.
+4. Visit **[https://midnight-three-coral.vercel.app/](https://midnight-three-coral.vercel.app/)** and click **Connect Lace** in the top navigation bar to cast confidential ballots.
