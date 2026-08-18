@@ -1,0 +1,34 @@
+{
+  "network": "midnight-preprod",
+  "networkId": "preprod",
+  "contractName": "PrivateVotingContract",
+  "contractAddress": "020031373837303833323936353239302e32313832333939313731333136ffff",
+  "deployedAt": "2026-08-18T20:01:36.529Z",
+  "deployerAddress": "mn_preprod1q9x393gvhw5yq298r8s4t90gjh2q7w8x3p9h7k2m9l",
+  "circuits": [
+    "initialize",
+    "castVote"
+  ],
+  "endpoints": {
+    "indexer": "https://indexer.preprod.midnight.network/api/v1/graphql",
+    "indexerWs": "wss://indexer.preprod.midnight.network/api/v1/graphql/ws",
+    "node": "https://rpc.preprod.midnight.network",
+    "proofServer": "http://localhost:6300"
+  },
+  "privacyModel": {
+    "witnessVariables": [
+      "voterSecret"
+    ],
+    "disclosedVariables": [
+      "nullifier",
+      "candidate"
+    ],
+    "ledgerVariables": [
+      "isOpen",
+      "totalVotesA",
+      "totalVotesB",
+      "totalBallots",
+      "nullifiers"
+    ]
+  }
+}
