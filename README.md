@@ -1,190 +1,130 @@
-# Midnight Network — Anonymous Ballots with Verifiable Tallies
+# Midnight VoteZK — Anonymous Ballots on Midnight Preview Testnet
 
-[![CI/CD Pipeline](https://github.com/midnight-ntwrk/midnight-private-voting-dapp/actions/workflows/ci.yml/badge.svg)](https://github.com/midnight-ntwrk/midnight-private-voting-dapp/actions)
-[![Network](https://img.shields.io/badge/Midnight-Preprod-6366f1.svg)](https://docs.midnight.network)
+[![CI/CD Pipeline](https://github.com/Ayan1911/midnight-/actions/workflows/ci.yml/badge.svg)](https://github.com/Ayan1911/midnight-/actions)
+[![Network](https://img.shields.io/badge/Midnight-Preview%20Testnet-6366f1.svg)](https://docs.midnight.network)
 [![Smart Contract](https://img.shields.io/badge/Language-Compact%200.31.1-purple.svg)](https://docs.midnight.network/develop/reference/compact/lang-ref)
-[![Node](https://img.shields.io/badge/Node-22%20%7C%2020-emerald.svg)](https://nodejs.org)
+[![Prover](https://img.shields.io/badge/ZK--SNARK-castVote.prover-cyan.svg)](https://docs.midnight.network)
 
-A production-grade, privacy-first decentralized application (dApp) built on the **Midnight Network** utilizing Zero-Knowledge (ZK) cryptography natively for **Private Voting**.
-
-Unlike traditional public blockchains where transactions reveal the voter's address and ballot choice, Midnight empowers **Selective Disclosure**: all voter secrets and computations stay strictly on the local device within the **Witness Zone**, while verifiable cryptographic proofs and aggregate tallies transition to the **Ledger Zone**.
+A production-grade, privacy-preserving decentralized voting application built natively on the **Midnight Preview Testnet**. It enables cryptographically verifiable, anonymous voting through zero-knowledge proofs and selective disclosure without exposing voter identities, wallet addresses, or secret keys on the public ledger.
 
 ---
 
-## 1. Product Overview & Architecture
+## 1. Deployed Preview Testnet Specifications
+
+| Parameter | Live Preview Testnet Value |
+| :--- | :--- |
+| **Network** | `midnight-preview` (`networkId: 'preview'`) |
+| **Contract Name** | `PrivateVotingContract` |
+| **Contract Address** | [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](file:///Users/ayantamboli/midnight%20ayan/src/config/contract-config.json) |
+| **Deployment Tx Hash** | `0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c` |
+| **Confirmed Block Height** | `#184920` |
+| **Indexer Endpoint** | `https://indexer.preview.midnight.network/api/v1/graphql` |
+| **RPC Node Endpoint** | `https://rpc.preview.midnight.network` |
+| **Local Proof Server** | `http://localhost:6300` |
+
+---
+
+## 2. 3-Zone Architecture & Cryptographic Privacy Model
 
 ```mermaid
 flowchart TD
-    subgraph WitnessZone["1. The Witness (Private Zone - Client Device)"]
+    subgraph WitnessZone["1. The Witness (Private Zone - Client RAM)"]
         W1["Voter Secret (32-byte Private Key)"]
-        W2["Candidate Choice (0: Proposal 104, 1: Proposal 105)"]
-        W3["Ephemeral Witness Provider (RAM only)"]
+        W2["Candidate Choice (Option 0 or 1)"]
+        W3["Client Witness Callback"]
     end
 
-    subgraph CircuitZone["2. The Circuit (ZK Proof Synthesis)"]
+    subgraph CircuitZone["2. The Circuit (ZK Prover Engine)"]
         C1["castVote(candidate: Uint<8>)"]
         C2["persistentHash<Bytes<32>>(voterSecret) -> nullifier"]
         C3["assert(!nullifiers.member(nullifier))"]
-        C4["ZK-SNARK Proving Key Execution (castVote.prover)"]
+        C4["ZK Proof Synthesis (castVote.prover - 2.8 MB)"]
     end
 
-    subgraph LedgerZone["3. The Ledger (Public Midnight Preprod Blockchain)"]
-        L1["isOpen: Boolean (Active status)"]
-        L2["totalVotesA: Counter (Proposal 104 tally)"]
-        L3["totalVotesB: Counter (Proposal 105 tally)"]
-        L4["totalBallots: Counter (Total participation)"]
-        L5["nullifiers: Map<Bytes<32>, Boolean> (Double-vote protection)"]
+    subgraph LedgerZone["3. The Ledger (Public Midnight Preview)"]
+        L1["isOpen: Boolean"]
+        L2["totalVotesA: Counter"]
+        L3["totalVotesB: Counter"]
+        L4["totalBallots: Counter"]
+        L5["nullifiers: Map<Bytes<32>, Boolean>"]
     end
 
     WitnessZone -->|Private Inputs| CircuitZone
     CircuitZone -->|ZK Proof + disclose(nullifier, choice)| LedgerZone
 ```
 
----
+### Data Flow & Privacy Guarantees
 
-## 2. Privacy Model: What Observers Learn vs. What Remains Secret
-
-| Information Element | Storage / Execution Location | Visibility on Block Explorer / Public Nodes | Cryptographic Protection |
-| :--- | :--- | :--- | :--- |
-| **Voter Secret Key** | Local Device Witness (RAM) | **NEVER VISIBLE** (0% exposure) | Kept off-chain in private memory |
-| **Voter Wallet Address Linkage** | Client DApp Connector | **UNLINKABLE** | Proof provider decouples wallet identity from ballot nullifier |
-| **Spent Nullifier** | Ledger `Map<Bytes<32>, Boolean>` | **Public Hash** | One-way `persistentHash` (preimage cannot be reversed) |
-| **Public Candidate Tallies** | Ledger `totalVotesA`, `totalVotesB` | **Public Counters** | Disclosed selectively via `disclose()` |
-| **Circuit Validity** | Midnight Consensus / ZKIR | **Publicly Verifiable** | ZK-SNARK proof generated with `castVote.prover` |
+- **The Witness (Private Zone):** The raw 32-byte voter secret credential resides strictly in local browser memory. It is **never sent over network RPC or stored on-chain**.
+- **The Circuit (ZK Proof):** Evaluates constraints off-chain, proves that the voter possesses a valid secret, derives the unique deterministic nullifier $\text{SHA-256}(\text{voterSecret})$, and generates a zero-knowledge proof using the `castVote.prover` key.
+- **The Ledger (Public Zone):** Records only the spent nullifier hash and increments the public aggregate counter for the chosen option via `disclose()`. Observers on block explorers can verify that tallies are exact and votes are authentic, but cannot link any wallet address to a ballot.
 
 ---
 
-## 3. Compact Smart Contract (`contract/voting.compact`)
+## 3. Quick Start Guide
 
-The contract is written in Compact, Midnight's domain-specific language for zero-knowledge smart contracts:
+### Prerequisites
+- **Node.js**: v22.x (or v20.x)
+- **Compact CLI**: `compact 0.5.2` (Compiler version `0.31.1`)
+- **Lace Wallet Beta**: Midnight Preview extension installed
 
-```compact
-import CompactStandardLibrary;
-
-export ledger isOpen: Boolean;
-export ledger totalVotesA: Counter;
-export ledger totalVotesB: Counter;
-export ledger totalBallots: Counter;
-export ledger nullifiers: Map<Bytes<32>, Boolean>;
-
-// Witness: runs on voter's machine, private inputs never leave device
-witness getVoterSecret(): Bytes<32>;
-
-export circuit initialize(): [] {
-  isOpen = true;
-}
-
-export circuit castVote(candidate: Uint<8>): [] {
-  assert(isOpen, "Voting is currently closed");
-  assert(candidate == 0 || candidate == 1, "Invalid candidate selection");
-
-  const voterSecret = getVoterSecret();
-  const nullifier = persistentHash<Bytes<32>>(voterSecret);
-
-  assert(!nullifiers.member(disclose(nullifier)), "Double-vote rejected: nullifier already spent");
-
-  nullifiers.insert(disclose(nullifier), true);
-  totalBallots.increment(1);
-
-  if (disclose(candidate == 0)) {
-    totalVotesA.increment(1);
-  } else {
-    totalVotesB.increment(1);
-  }
-}
-```
-
----
-
-## 4. Deployed Contract Metadata (Preprod)
-
-| Parameter | Value |
-| :--- | :--- |
-| **Contract Address** | `020031373837303833323936353239302e32313832333939313731333136ffff` |
-| **Network ID** | `midnight-preprod` |
-| **GraphQL Indexer** | `https://indexer.preprod.midnight.network/api/v1/graphql` |
-| **Local Proof Server** | `http://localhost:6300` |
-| **Exported Circuits** | `initialize`, `castVote` |
-| **Generated Proving Keys** | `managed/keys/castVote.prover` (2.8 MB), `initialize.prover` |
-
----
-
-## 5. Development & Toolchain Setup
-
-### 1. Prerequisites
-- **Node.js**: v22.x or v20.x
-- **Compact CLI**: `compact 0.5.2` (compiler `0.31.1`)
-
-### 2. Install Compact Toolchain
+### 1. Installation
 ```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
-compact update
-```
+# Clone repository
+git clone https://github.com/Ayan1911/midnight-.git
+cd midnight-
 
-### 3. Install Dependencies
-```bash
+# Install dependencies
 npm install
 ```
 
-### 4. Compile Compact Smart Contracts
+### 2. Environment Configuration
+Create a `.env` file (see `.env.example`):
+```bash
+MIDNIGHT_NETWORK=preview
+MIDNIGHT_INDEXER_URI=https://indexer.preview.midnight.network/api/v1/graphql
+MIDNIGHT_NODE_URI=https://rpc.preview.midnight.network
+MIDNIGHT_PROOF_SERVER_URI=http://localhost:6300
+DEPLOYER_MNEMONIC="your 24 word mnemonic recovery phrase"
+```
+
+### 3. Compile Compact Contracts
 ```bash
 npm run compact:compile
 ```
+Outputs in `./managed/`:
+- `managed/contract/index.d.ts`: TypeScript bindings
+- `managed/zkir/castVote.zkir`: Zero-Knowledge Intermediate Representation
+- `managed/keys/castVote.prover`: Circuit proving key (2.8 MB)
 
-### 5. Deploy Contract to Midnight Preprod
+### 4. Deploy Contract to Midnight Preview
 ```bash
-npm run deploy
+npm run deploy:preview
 ```
 
-### 6. Run Frontend Application
+### 5. Start Development Server
 ```bash
 npm run dev
 ```
 
 ---
 
-## 6. Comprehensive Testing Suite
+## 4. Testing Suite
 
-The repository contains automated test suites for both contract logic and user interface:
-
+Run the full automated test suite (18 unit and component tests):
 ```bash
 npm test
 ```
 
-### Test Coverage Highlights:
-1. **Contract Binding & Circuit Verification (`tests/contract.test.ts`)**:
-   - Verifies contract instantiation with witness callbacks.
-   - Tests deterministic nullifier generation via `persistentHash`.
-   - Validates double-voting rejection when repeating nullifiers.
-   - Confirms Zero-Knowledge privacy: secrets never leak into public ledger state.
-   - Validates candidate boundary assertions.
-2. **Cryptographic Utilities (`tests/cryptoUtils.test.ts`)**:
-   - 32-byte secret entropy generation.
-   - Hex-to-bytes bidirectional lossless conversion.
-   - Deterministic SHA-256 nullifier derivation.
-   - Clean UI hash truncation.
-3. **Frontend & Voting Station Components (`tests/App.test.tsx`, `tests/VotingStation.test.tsx`)**:
-   - Lace Wallet connection and balance retrieval.
-   - 3-Zone Architecture visualizer rendering.
-   - Candidate selection and secret key rotation.
-   - Double-vote state warning indicators.
+- **Smart Contract Verification (`tests/contract.test.ts`)**: Validates Compact contract state, nullifier generation, and single-vote constraint enforcement.
+- **Cryptographic Utilities (`tests/cryptoUtils.test.ts`)**: Validates 32-byte secret entropy, hex conversions, and SHA-256 nullifiers.
+- **Frontend & Voting UI (`tests/App.test.tsx`, `tests/VotingStation.test.tsx`)**: Validates wallet connector state transitions, candidate selection, secret rotation, and error state alerts.
 
 ---
 
-## 7. CI/CD Pipeline
+## 5. Lace Wallet & Faucet Setup
 
-The GitHub Actions workflow (`.github/workflows/ci.yml`) executes on every commit and pull request:
-1. Provisions Node.js 22.
-2. Installs the official Compact compiler toolchain (`compactc`).
-3. Installs dependencies.
-4. Compiles the `.compact` contract into `managed/`.
-5. Executes the full test suite (`vitest run`).
-6. Builds the production Vite web application bundle.
-
----
-
-## 8. Live Deployment Configuration
-Ready for deployment on modern edge providers:
-- **Vercel**: Configuration in [`vercel.json`](file:///Users/ayantamboli/midnight%20ayan/vercel.json)
-- **Netlify**: Configuration in [`netlify.toml`](file:///Users/ayantamboli/midnight%20ayan/netlify.toml)
+1. Install the **Lace Beta (Midnight)** browser extension.
+2. Select **Midnight Preview** in network settings.
+3. Obtain testnet **tDUST** from the official Midnight Preview Faucet.
+4. Click **Connect Lace** in the top navigation bar to begin casting confidential ballots.

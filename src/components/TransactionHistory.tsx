@@ -1,5 +1,5 @@
 import React from 'react';
-import { History, ExternalLink, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ExternalLink, CheckCircle2, History } from 'lucide-react';
 import { TransactionRecord } from '../types';
 import { truncateHash } from '../services/cryptoUtils';
 
@@ -11,48 +11,46 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
   if (transactions.length === 0) return null;
 
   return (
-    <div className="bg-slate-900/60 border border-indigo-900/40 rounded-2xl p-6 backdrop-blur-md shadow-xl">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-[#0e131f] border border-zinc-800/80 rounded-xl p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-zinc-800/60">
         <div className="flex items-center gap-2">
-          <History className="w-5 h-5 text-indigo-400" />
-          <h3 className="text-base font-bold text-white tracking-tight">
-            Recent On-Chain Transactions ({transactions.length})
+          <History className="w-3.5 h-3.5 text-zinc-400" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
+            Recent On-Chain Activity ({transactions.length})
           </h3>
         </div>
-        <span className="text-xs text-slate-400">Midnight Preprod Explorer</span>
+        <span className="text-[10px] font-mono text-zinc-500">Explorer Network: Preview</span>
       </div>
 
       <div className="space-y-2">
         {transactions.map((tx, idx) => (
           <div
             key={idx}
-            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 text-xs gap-2 hover:border-slate-700 transition-colors"
+            className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg bg-zinc-950/80 border border-zinc-800/80 text-xs gap-2"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 font-mono">
-                  <span className="text-white font-semibold">{truncateHash(tx.txHash, 10, 8)}</span>
-                  <span className="text-[10px] text-slate-500">Block #{tx.blockNumber}</span>
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+              <div className="font-mono text-[11px]">
+                <div className="flex items-center gap-2 text-zinc-200 font-medium">
+                  <span>{truncateHash(tx.txHash, 10, 8)}</span>
+                  <span className="text-[10px] text-zinc-500 font-sans">Block #{tx.blockNumber}</span>
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  Spent Nullifier: <span className="text-cyan-300 font-mono">{truncateHash(tx.nullifier, 8, 6)}</span> | Proof Size: {tx.proofSize}
+                <div className="text-[10px] text-zinc-400 mt-0.5 font-sans">
+                  Nullifier: <span className="text-cyan-400 font-mono">{truncateHash(tx.nullifier, 8, 6)}</span> • Choice: Option #{tx.candidateChoice}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-[11px] text-slate-400">{tx.timestamp}</span>
+            <div className="flex items-center gap-3 text-[11px] font-mono text-zinc-400">
+              <span>{tx.timestamp}</span>
               <a
-                href={`https://explorer.preprod.midnight.network/tx/${tx.txHash}`}
+                href={`https://explorer.preview.midnight.network/tx/${tx.txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 rounded-lg bg-indigo-950/60 border border-indigo-800/40 text-indigo-300 hover:text-white transition-colors"
-                title="View on Midnight Preprod Explorer"
+                className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                title="View on Midnight Preview Explorer"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3 h-3" />
               </a>
             </div>
           </div>

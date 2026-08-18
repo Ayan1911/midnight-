@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "compact:compile": "export PATH=\"$HOME/.local/bin:$PATH\"; compact compile contract/voting.compact ./managed",
     "deploy": "tsx contract/deploy.ts",
+    "deploy:preview": "tsx scripts/deploy-testnet.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

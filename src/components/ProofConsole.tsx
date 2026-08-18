@@ -11,74 +11,70 @@ export const ProofConsole: React.FC<ProofConsoleProps> = ({ steps, isSubmitting 
   if (steps.length === 0 && !isSubmitting) return null;
 
   return (
-    <div className="bg-slate-950/90 border border-indigo-900/50 rounded-2xl p-5 shadow-2xl backdrop-blur-md">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+    <div className="bg-[#0e131f] border border-zinc-800/80 rounded-xl p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-zinc-800/60">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse"></div>
-          <Terminal className="w-4 h-4 text-indigo-400" />
-          <h3 className="text-sm font-bold text-white tracking-tight">
-            ZK Proof Pipeline Execution Logs
+          <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
+            Cryptographic Execution Stream
           </h3>
         </div>
-        <span className="text-[11px] font-mono text-slate-400">Target: Compact castVote.zkir</span>
+        <span className="text-[10px] font-mono text-zinc-500">Circuit: castVote.zkir</span>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
         {steps.map((step) => {
           return (
             <div
               key={step.id}
-              className={`p-3.5 rounded-xl border transition-all text-xs ${
+              className={`p-3 rounded-lg border text-xs flex flex-col justify-between transition-all ${
                 step.status === 'running'
-                  ? 'bg-indigo-950/40 border-indigo-500/60 shadow-lg shadow-indigo-500/10'
+                  ? 'bg-zinc-900 border-cyan-500/80'
                   : step.status === 'completed'
-                  ? 'bg-slate-900/70 border-emerald-500/40'
+                  ? 'bg-zinc-950/80 border-emerald-800/60'
                   : step.status === 'error'
-                  ? 'bg-red-950/40 border-red-500/50'
-                  : 'bg-slate-900/30 border-slate-800/40 opacity-60'
+                  ? 'bg-red-950/40 border-red-800/60'
+                  : 'bg-zinc-950/40 border-zinc-900 opacity-50'
               }`}
             >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2 font-semibold">
-                  {step.status === 'running' && (
-                    <RefreshCw className="w-4 h-4 text-indigo-400 animate-spin" />
-                  )}
-                  {step.status === 'completed' && (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  )}
-                  {step.status === 'error' && (
-                    <AlertCircle className="w-4 h-4 text-red-400" />
-                  )}
-                  {step.status === 'idle' && (
-                    <Clock className="w-4 h-4 text-slate-500" />
-                  )}
-                  <span
-                    className={
-                      step.status === 'running'
-                        ? 'text-indigo-300'
-                        : step.status === 'completed'
-                        ? 'text-emerald-300'
-                        : step.status === 'error'
-                        ? 'text-red-300'
-                        : 'text-slate-400'
-                    }
-                  >
-                    {step.title}
-                  </span>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5 font-medium text-[11px]">
+                    {step.status === 'running' && (
+                      <RefreshCw className="w-3 h-3 text-cyan-400 animate-spin" />
+                    )}
+                    {step.status === 'completed' && (
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    )}
+                    {step.status === 'error' && (
+                      <AlertCircle className="w-3 h-3 text-red-400" />
+                    )}
+                    {step.status === 'idle' && (
+                      <Clock className="w-3 h-3 text-zinc-600" />
+                    )}
+                    <span
+                      className={
+                        step.status === 'running'
+                          ? 'text-cyan-300'
+                          : step.status === 'completed'
+                          ? 'text-emerald-300'
+                          : step.status === 'error'
+                          ? 'text-red-300'
+                          : 'text-zinc-400'
+                      }
+                    >
+                      {step.title}
+                    </span>
+                  </div>
                 </div>
-                {step.timestamp && (
-                  <span className="text-[10px] font-mono text-slate-500">
-                    {step.timestamp}
-                  </span>
-                )}
+
+                <p className="text-zinc-400 text-[10px] leading-relaxed">
+                  {step.description}
+                </p>
               </div>
 
-              <p className="text-slate-300 text-[11px] ml-6 leading-relaxed">
-                {step.description}
-              </p>
-
               {step.details && (
-                <div className="mt-2 ml-6 p-2 rounded bg-slate-950/80 border border-slate-800 font-mono text-[10px] text-indigo-200 break-all">
+                <div className="mt-2 p-1.5 rounded bg-[#070a10] border border-zinc-900 font-mono text-[9px] text-zinc-300 break-all">
                   {step.details}
                 </div>
               )}

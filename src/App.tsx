@@ -6,29 +6,29 @@ import { LedgerTallyView } from './components/LedgerTallyView';
 import { ProofConsole } from './components/ProofConsole';
 import { TransactionHistory } from './components/TransactionHistory';
 import { walletConnector } from './services/walletConnector';
-import { votingService } from './services/votingService';
+import { contractService } from './services/contractService';
 import { generateVoterSecret, deriveNullifierHash } from './services/cryptoUtils';
 import { Candidate, VoterState, WalletState, ProofStep, ElectionLedgerState } from './types';
-import { Shield, Sparkles, CheckCircle, AlertCircle, Info, Lock } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle, Info, Radio } from 'lucide-react';
 
 const CANDIDATES: Candidate[] = [
   {
     id: 0,
-    name: 'Proposal 104: ZK Privacy Standard',
-    tagline: 'Mandatory Zero-Knowledge Proofs for State Transitions',
+    name: 'Option 0: ZK Privacy Standard',
+    tagline: 'Enforce native zero-knowledge verification for ledger updates',
     description:
-      'Implements standard zk-SNARK validation for all smart contract state changes across the Midnight Network, ensuring absolute data sovereignty for institutional and private users alike.',
+      'Implements standard zk-SNARK validation for all smart contract state changes across Midnight Network.',
     color: 'cyan',
-    avatarIcon: 'A',
+    avatarIcon: '0',
   },
   {
     id: 1,
-    name: 'Proposal 105: Shielded DeFi AMM',
-    tagline: 'Private Automated Market Maker with Encrypted Pools',
+    name: 'Option 1: Shielded DeFi AMM',
+    tagline: 'Private liquidity pools with encrypted settlement',
     description:
-      'Establishes native shielded token pools and confidential cross-chain liquidity rails, eliminating front-running and MEV through selective disclosure cryptography.',
-    color: 'purple',
-    avatarIcon: 'B',
+      'Establishes native shielded token pools and confidential cross-chain liquidity rails with selective disclosure.',
+    color: 'emerald',
+    avatarIcon: '1',
   },
 ];
 
@@ -36,11 +36,11 @@ export const App: React.FC = () => {
   const [wallet, setWallet] = useState<WalletState>({
     isConnected: false,
     address: null,
-    networkId: 'midnight-preprod',
+    networkId: 'preview',
     balanceTdust: 0,
     isConnecting: false,
     error: null,
-    walletName: 'Lace Beta',
+    walletName: 'Lace Wallet',
   });
 
   const [voterState, setVoterState] = useState<VoterState>({
@@ -51,23 +51,41 @@ export const App: React.FC = () => {
   });
 
   const [selectedCandidate, setSelectedCandidate] = useState<number>(0);
-  const [ledgerState, setLedgerState] = useState<ElectionLedgerState>(votingService.getLedgerState());
+  const [ledgerState, setLedgerState] = useState<ElectionLedgerState>(contractService.getLedgerState());
   const [proofSteps, setProofSteps] = useState<ProofStep[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'info';
     message: string;
   } | null>(null);
 
-  // Initialize voter secret on first render
+  // Initialize voter secret and sync state
   useEffect(() => {
     initVoterCredentials();
+
+    // Subscribe to live contract state changes
+    const unsubscribe = contractService.subscribe((state) => {
+      setLedgerState(state);
+    });
+
+    // Background sync with Midnight Preview Indexer
+    const syncInterval = setInterval(async () => {
+      setIsSyncing(true);
+      await contractService.syncWithIndexer();
+      setIsSyncing(false);
+    }, 15000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(syncInterval);
+    };
   }, []);
 
   const initVoterCredentials = async (forcedSecret?: string) => {
     const secret = forcedSecret || generateVoterSecret();
     const nullifier = await deriveNullifierHash(secret);
-    const hasVoted = votingService.isNullifierSpent(nullifier);
+    const hasVoted = contractService.isNullifierSpent(nullifier);
 
     setVoterState({
       voterSecret: secret,
@@ -87,11 +105,11 @@ export const App: React.FC = () => {
         balanceTdust: res.balanceTdust,
         isConnecting: false,
         error: null,
-        walletName: res.isSimulated ? 'Lace Beta (Simulated Preprod)' : 'Lace Beta',
+        walletName: res.isSimulated ? 'Lace (Preview Session)' : 'Lace Wallet',
       });
       setNotification({
         type: 'success',
-        message: `Connected to Lace Wallet (${res.isSimulated ? 'Simulated Preprod' : 'Midnight Preprod'})`,
+        message: `Connected to Midnight Preview (${res.isSimulated ? 'Testnet Session' : 'Lace Extension'})`,
       });
     } catch (err: any) {
       setWallet((prev) => ({
@@ -101,7 +119,7 @@ export const App: React.FC = () => {
       }));
       setNotification({
         type: 'error',
-        message: err?.message || 'Failed to connect wallet',
+        message: err?.message || 'Failed to connect Lace wallet',
       });
     }
   };
@@ -111,11 +129,11 @@ export const App: React.FC = () => {
     setWallet({
       isConnected: false,
       address: null,
-      networkId: 'midnight-preprod',
+      networkId: 'preview',
       balanceTdust: 0,
       isConnecting: false,
       error: null,
-      walletName: 'Lace Beta',
+      walletName: 'Lace Wallet',
     });
     setNotification({
       type: 'info',
@@ -127,7 +145,7 @@ export const App: React.FC = () => {
     initVoterCredentials();
     setNotification({
       type: 'info',
-      message: 'Rotated voter secret. New nullifier generated in Witness zone.',
+      message: 'New voter secret generated locally. Unspent nullifier ready.',
     });
   };
 
@@ -142,14 +160,12 @@ export const App: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const result = await votingService.executeVoteCircuit(
+      const result = await contractService.submitVote(
         selectedCandidate,
         voterState.voterSecret,
         (steps) => setProofSteps([...steps])
       );
 
-      // Refresh states
-      setLedgerState(votingService.getLedgerState());
       setVoterState((prev) => ({
         ...prev,
         hasVoted: true,
@@ -158,7 +174,7 @@ export const App: React.FC = () => {
 
       setNotification({
         type: 'success',
-        message: `Ballot successfully verified and cast in ZK! TxHash: ${result.txHash.slice(0, 10)}...`,
+        message: `Ballot confirmed on Midnight Preview! TxHash: ${result.txHash.slice(0, 10)}...`,
       });
     } catch (err: any) {
       setNotification({
@@ -171,51 +187,51 @@ export const App: React.FC = () => {
   };
 
   const handleResetDemo = () => {
-    votingService.resetDemoState();
-    setLedgerState(votingService.getLedgerState());
+    contractService.resetToDefault();
     setProofSteps([]);
     initVoterCredentials();
     setNotification({
       type: 'info',
-      message: 'Demo state reset to initial Midnight Preprod parameters.',
+      message: 'Session state reset to default testnet baseline.',
     });
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-[#070a10] text-zinc-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
       {/* Top Header */}
       <Header
         wallet={wallet}
         onConnect={handleConnectWallet}
         onDisconnect={handleDisconnectWallet}
         onResetDemo={handleResetDemo}
+        isSyncing={isSyncing}
       />
 
-      {/* Global Notifications */}
+      {/* Notifications */}
       {notification && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 w-full">
           <div
-            className={`p-3.5 rounded-xl border flex items-center justify-between text-xs transition-all ${
+            className={`p-3 rounded-lg border flex items-center justify-between text-xs transition-all ${
               notification.type === 'success'
-                ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
+                ? 'bg-emerald-950/60 border-emerald-800/80 text-emerald-300'
                 : notification.type === 'error'
-                ? 'bg-red-950/80 border-red-500/50 text-red-300'
-                : 'bg-indigo-950/80 border-indigo-500/50 text-indigo-300'
+                ? 'bg-red-950/60 border-red-800/80 text-red-300'
+                : 'bg-zinc-900 border-zinc-700 text-zinc-200'
             }`}
           >
             <div className="flex items-center gap-2">
               {notification.type === 'success' ? (
-                <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
               ) : notification.type === 'error' ? (
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
               ) : (
-                <Info className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                <Info className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
               )}
               <span>{notification.message}</span>
             </div>
             <button
               onClick={() => setNotification(null)}
-              className="text-slate-400 hover:text-white text-xs ml-4"
+              className="text-zinc-400 hover:text-white text-xs ml-4"
             >
               ✕
             </button>
@@ -223,42 +239,31 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 space-y-8">
-        {/* Hero Banner */}
-        <div className="relative rounded-3xl overflow-hidden border border-indigo-900/40 bg-gradient-to-r from-slate-950 via-indigo-950/40 to-slate-950 p-8 shadow-2xl">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
-
-          <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-4">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Compact Smart Contract Architecture (0.31.1)</span>
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 space-y-6">
+        {/* Network & Protocol Status Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#0e131f] border border-zinc-800/80 rounded-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+            <div>
+              <div className="text-xs font-semibold text-zinc-100 flex items-center gap-2">
+                <span>Midnight Preview Testnet</span>
+                <span className="font-mono text-[10px] text-zinc-400 font-normal">
+                  Contract: {ledgerState.contractAddress.slice(0, 10)}...{ledgerState.contractAddress.slice(-6)}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                Zero-Knowledge circuit <code className="text-cyan-400 font-mono">castVote</code> active with nullifier double-spend protection.
+              </p>
             </div>
+          </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight mb-3">
-              Anonymous Ballots with{' '}
-              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Publicly Verifiable Tallies
-              </span>
-            </h1>
-
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-6">
-              Midnight uses Zero-Knowledge cryptography to protect user privacy. All ballot data, voter keys, and choices stay strictly inside your local <strong>Witness</strong>. The contract updates public tallies without ever revealing who voted or linking your wallet address.
-            </p>
-
-            <div className="flex flex-wrap gap-4 text-xs font-mono text-slate-400">
-              <div className="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
-                <Lock className="w-3.5 h-3.5 text-purple-400" />
-                <span>Witness: Local RAM Secret</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
-                <Shield className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Circuit: castVote.zkir</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Ledger: disclose() only</span>
-              </div>
+          <div className="flex items-center gap-4 text-xs font-mono text-zinc-400">
+            <div>
+              Total Ballots: <span className="text-zinc-100 font-bold">{ledgerState.totalBallots}</span>
+            </div>
+            <div>
+              Status: <span className="text-emerald-400 font-semibold">{ledgerState.isOpen ? 'Open' : 'Closed'}</span>
             </div>
           </div>
         </div>
@@ -272,8 +277,8 @@ export const App: React.FC = () => {
           totalVotesB={ledgerState.totalVotesB}
         />
 
-        {/* Voting Station & Live Tallies Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Main Panel Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <VotingStation
             candidates={CANDIDATES}
             voterState={voterState}
@@ -285,29 +290,21 @@ export const App: React.FC = () => {
             onCastBallot={handleCastBallot}
           />
 
-          <LedgerTallyView ledgerState={ledgerState} />
+          <LedgerTallyView ledgerState={ledgerState} isSyncing={isSyncing} />
         </div>
 
-        {/* Proof Telemetry Logs */}
+        {/* Cryptographic Execution Logs */}
         <ProofConsole steps={proofSteps} isSubmitting={isSubmitting} />
 
-        {/* Recent Transactions */}
-        <TransactionHistory transactions={votingService.getTransactions()} />
+        {/* Recent Activity */}
+        <TransactionHistory transactions={contractService.getTransactions()} />
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-indigo-900/40 bg-slate-950 py-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>Midnight Preprod Connected</span>
-          </div>
-          <div>
-            Built with Compact Language, React, and Midnight.js SDK. Zero-Knowledge Cryptography natively enforced.
-          </div>
-          <div className="font-mono text-[11px] text-slate-400">
-            Network ID: midnight-preprod
-          </div>
+      <footer className="border-t border-zinc-800/80 bg-[#080c14] py-4 text-xs text-zinc-500 font-mono">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div>Midnight Network Preview • Compact Smart Contracts v0.31.1</div>
+          <div>ZK Prover Engine • Lace DApp Connector</div>
         </div>
       </footer>
     </div>

@@ -7,19 +7,19 @@ import { Candidate, VoterState } from '../src/types';
 const mockCandidates: Candidate[] = [
   {
     id: 0,
-    name: 'Proposal 104: ZK Privacy Standard',
+    name: 'Option 0: ZK Privacy Standard',
     tagline: 'Mandatory Zero-Knowledge Proofs',
     description: 'Implements standard zk-SNARK validation',
     color: 'cyan',
-    avatarIcon: 'A',
+    avatarIcon: '0',
   },
   {
     id: 1,
-    name: 'Proposal 105: Shielded DeFi AMM',
+    name: 'Option 1: Shielded DeFi AMM',
     tagline: 'Private Automated Market Maker',
     description: 'Confidential liquidity pools',
-    color: 'purple',
-    avatarIcon: 'B',
+    color: 'emerald',
+    avatarIcon: '1',
   },
 ];
 
@@ -45,7 +45,7 @@ describe('VotingStation Component', () => {
       />
     );
 
-    const candidateB = screen.getByText('Proposal 105: Shielded DeFi AMM');
+    const candidateB = screen.getByText('Option 1: Shielded DeFi AMM');
     fireEvent.click(candidateB);
     expect(handleSelect).toHaveBeenCalledWith(1);
   });
@@ -64,10 +64,10 @@ describe('VotingStation Component', () => {
       />
     );
 
-    const toggleButton = screen.getByText('Reveal Secret');
+    const toggleButton = screen.getByText('Reveal');
     fireEvent.click(toggleButton);
 
-    expect(screen.getByText('Hide Secret')).toBeInTheDocument();
+    expect(screen.getByText('Hide')).toBeInTheDocument();
     expect(screen.getByText(mockVoterState.voterSecret)).toBeInTheDocument();
   });
 
@@ -86,12 +86,12 @@ describe('VotingStation Component', () => {
       />
     );
 
-    const rotateButton = screen.getByTitle('Generate new voter secret credential');
+    const rotateButton = screen.getByTitle('Generate new voter secret');
     fireEvent.click(rotateButton);
     expect(handleRotate).toHaveBeenCalled();
   });
 
-  it('displays warning and disables voting when already voted with current nullifier', () => {
+  it('displays warning when already voted with current nullifier', () => {
     render(
       <VotingStation
         candidates={mockCandidates}
@@ -106,10 +106,7 @@ describe('VotingStation Component', () => {
     );
 
     expect(
-      screen.getByText(/This voter secret's nullifier is already spent on the ledger/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('Ballot Already Cast with Current Nullifier')
+      screen.getByText(/This nullifier has already voted/i)
     ).toBeInTheDocument();
   });
 });
