@@ -8,6 +8,7 @@
 
 > [!IMPORTANT]
 > 🌐 **Live Production dApp URL:** **[https://midnight-three-coral.vercel.app/](https://midnight-three-coral.vercel.app/)**  
+> 🎬 **Video Demo (Loom):** **[Watch Walkthrough on Loom](https://www.loom.com/share/75870d65d6c243e89ce8aab399d30218)**  
 > 🔗 **Midnight Preview Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.preview.midnight.network/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000)  
 > ⚡ **CI/CD Workflow Status:** Verified on GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
 
@@ -171,7 +172,7 @@ The user interface integrates the **Lace Beta Wallet** DApp Connector (`window.m
 ---
 
 ### 2.5 Demo Video (Level 2)
-- 🎬 **Level 2 Demo Video (Wallet Connect & Circuit Execution):** [Insert Demo Video URL Here]
+- 🎬 **Level 2 Demo Video (Wallet Connect & Circuit Execution):** [Watch Demo on Loom](https://www.loom.com/share/75870d65d6c243e89ce8aab399d30218)
 
 ---
 
@@ -236,7 +237,7 @@ Automated continuous integration is configured via **GitHub Actions** in [`.gith
 ---
 
 ### 3.4 Full Demo Video (Level 3)
-- 🎬 **Level 3 Full Functionality Video (1-Minute End-to-End Walkthrough):** [Insert Full Demo Video URL Here]
+- 🎬 **Level 3 Full Functionality Video (1-Minute End-to-End Walkthrough):** [Watch Full Walkthrough on Loom](https://www.loom.com/share/75870d65d6c243e89ce8aab399d30218)
 
 ---
 
