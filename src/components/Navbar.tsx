@@ -4,9 +4,10 @@ import { WalletState } from '../services/walletConnector';
 interface NavbarProps {
   wallet: WalletState;
   onConnect: () => void;
+  onDisconnect?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ wallet, onConnect }) => {
+export const Navbar: React.FC<NavbarProps> = ({ wallet, onConnect, onDisconnect }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -44,12 +45,30 @@ export const Navbar: React.FC<NavbarProps> = ({ wallet, onConnect }) => {
           <li><a href="https://docs.midnight.network" target="_blank" rel="noreferrer">Protocol Docs</a></li>
         </ul>
 
-        <div className="nav-actions">
+        <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {wallet.connected ? (
-            <button className="btn-pill btn-secondary mono" title="Connected to Midnight Testnet">
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />
-              {wallet.address}
-            </button>
+            <>
+              <button className="btn-pill btn-secondary mono" title="Connected to Midnight Testnet" style={{ cursor: 'default' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', display: 'inline-block' }} />
+                {wallet.address}
+              </button>
+              {onDisconnect && (
+                <button
+                  className="btn-pill"
+                  onClick={onDisconnect}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    color: '#f87171',
+                    borderColor: 'rgba(239, 68, 68, 0.3)',
+                    fontSize: '0.8rem',
+                    padding: '8px 14px'
+                  }}
+                  title="Disconnect Wallet"
+                >
+                  Disconnect
+                </button>
+              )}
+            </>
           ) : (
             <button className="btn-pill btn-primary" onClick={onConnect}>
               Connect Lace Wallet

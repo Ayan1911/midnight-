@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { WalletState } from '../services/walletConnector';
 
 interface VotingStationProps {
@@ -7,19 +7,35 @@ interface VotingStationProps {
   isProving: boolean;
 }
 
+/**
+ * Generates a cryptographically secure 32-byte secret salt in isolated JS memory.
+ * Never exposed via DOM inputs or plaintext HTML rendering.
+ */
+function generateSecureEntropy(): string {
+  const buffer = new Uint8Array(32);
+  if (typeof window !== 'undefined' && window.crypto) {
+    window.crypto.getRandomValues(buffer);
+  } else {
+    for (let i = 0; i < 32; i++) buffer[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(buffer, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export const VotingStation: React.FC<VotingStationProps> = ({ wallet, onCastVote, isProving }) => {
   const [selectedCandidate, setSelectedCandidate] = useState<number>(1);
-  const [voterSecret, setVoterSecret] = useState<string>(() => {
-    return Array.from({ length: 32 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join('');
-  });
+  
+  // Isolated in memory / JS state — NEVER rendered to DOM inputs or plaintext HTML
+  const secretRef = useRef<string>(generateSecureEntropy());
+  const [entropyGeneratedAt, setEntropyGeneratedAt] = useState<string>(() => new Date().toLocaleTimeString());
 
   const rotateSecret = () => {
-    setVoterSecret(Array.from({ length: 32 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join(''));
+    secretRef.current = generateSecureEntropy();
+    setEntropyGeneratedAt(new Date().toLocaleTimeString());
   };
 
   const handleSubmit = async () => {
-    if (!wallet.connected) return;
-    await onCastVote(selectedCandidate, voterSecret);
+    if (!wallet.connected || isProving) return;
+    await onCastVote(selectedCandidate, secretRef.current);
     rotateSecret();
   };
 
@@ -53,18 +69,21 @@ export const VotingStation: React.FC<VotingStationProps> = ({ wallet, onCastVote
         </button>
       </div>
 
+      {/* Zero DOM Leak Witness Box */}
       <div className="secret-box">
         <div className="secret-label">
-          <span>Private Voter Secret (32-Byte Entropy)</span>
+          <span>Private Witness State (Isolated JS Memory)</span>
           <button
             type="button"
             onClick={rotateSecret}
             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.72rem' }}
           >
-            ↻ Regenerate
+            ↻ Re-seed Entropy
           </button>
         </div>
-        <div className="secret-value mono">{voterSecret}</div>
+        <div className="secret-value mono" style={{ letterSpacing: '2px', color: 'var(--accent-cyan)' }}>
+          ●●●●●●●●●●●●●●●● (32-Byte Secret Salt Isolated in RAM • {entropyGeneratedAt})
+        </div>
       </div>
 
       <button

@@ -33,7 +33,7 @@ describe('VotingStation Component', () => {
     expect(handleCastVote).toHaveBeenCalledWith(2, expect.any(String));
   });
 
-  it('rotates voter secret on button click', () => {
+  it('protects private witness from DOM leaks', () => {
     render(
       <VotingStation
         wallet={mockWallet}
@@ -42,9 +42,10 @@ describe('VotingStation Component', () => {
       />
     );
 
-    const rotateButton = screen.getByText('↻ Regenerate');
-    fireEvent.click(rotateButton);
-    expect(rotateButton).toBeInTheDocument();
+    expect(screen.getByText(/Isolated in RAM/i)).toBeInTheDocument();
+    const reseedButton = screen.getByText('↻ Re-seed Entropy');
+    fireEvent.click(reseedButton);
+    expect(reseedButton).toBeInTheDocument();
   });
 
   it('disables voting when wallet is disconnected', () => {

@@ -25,7 +25,7 @@ export default function App() {
   ]);
   const [isProving, setIsProving] = useState<boolean>(false);
   const [logs, setLogs] = useState<LogEntry[]>([
-    { timestamp: new Date().toLocaleTimeString(), text: 'Application initialized on Midnight Preprod network.', type: 'info' },
+    { timestamp: new Date().toLocaleTimeString(), text: 'Application initialized on Midnight Preview testnet.', type: 'info' },
     { timestamp: new Date().toLocaleTimeString(), text: 'Compact contract bindings loaded: voting.compact', type: 'info' },
   ]);
 
@@ -39,6 +39,13 @@ export default function App() {
     const result = await walletService.connectLace();
     setWallet(result);
     addLog(`Connected: ${result.address} on ${result.network}`, 'success');
+  };
+
+  const handleDisconnectWallet = () => {
+    const walletService = MidnightWalletService.getInstance();
+    const result = walletService.disconnect();
+    setWallet(result);
+    addLog('Wallet disconnected. Session cleared from memory.', 'warn');
   };
 
   const handleCastVote = async (candidateId: number, voterSecret: string) => {
@@ -59,13 +66,13 @@ export default function App() {
     else setTallyB((prev) => prev + 1);
     setNullifiers((prev) => [simulatedNullifier, ...prev]);
 
-    addLog(`ZK Proof verified on Midnight Preprod! TxHash: ${txHash.slice(0, 16)}...`, 'success');
+    addLog(`ZK Proof verified on Midnight Preview! TxHash: ${txHash.slice(0, 16)}...`, 'success');
     setIsProving(false);
   };
 
   return (
     <>
-      <Navbar wallet={wallet} onConnect={handleConnectWallet} />
+      <Navbar wallet={wallet} onConnect={handleConnectWallet} onDisconnect={handleDisconnectWallet} />
 
       <section className="hero-card">
         <div className="hero-grid" />
