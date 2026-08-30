@@ -1,15 +1,14 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    wasm(),
-    topLevelAwait()
+    wasm()
   ],
   optimizeDeps: {
     exclude: ['@midnight-ntwrk/compact-runtime'],
@@ -21,5 +20,9 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true
   }
 });

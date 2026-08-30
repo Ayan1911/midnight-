@@ -1,9 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import React from 'react';
 import { HeroSection } from '../src/components/HeroSection';
 
 describe('HeroSection Component (Xero Landing Hero)', () => {
+  afterEach(() => cleanup());
+
   it('renders Xero branding, heading, and call to action', () => {
     render(<HeroSection />);
     expect(screen.getByText('Xero')).toBeInTheDocument();

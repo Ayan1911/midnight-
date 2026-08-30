@@ -10,6 +10,8 @@ describe('MidnightWalletService SDK Integration', () => {
 
   it('rejects connection if Lace is not present', async () => {
     const service = MidnightWalletService.getInstance();
-    await expect(service.connect()).rejects.toThrow('Lace Wallet Beta extension not detected.');
+    const result = await service.connect();
+    expect(result.connected).toBe(false);
+    expect(result.error).toBe('LACE_NOT_FOUND');
   });
 });

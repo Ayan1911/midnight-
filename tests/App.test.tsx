@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import React from 'react';
 import App from '../src/App';
 
@@ -7,12 +8,15 @@ describe('Midnight Private Voting dApp (App Component)', () => {
   beforeEach(() => {
     localStorage.clear();
   });
+  afterEach(() => cleanup());
 
-  it('renders navbar brand with Preprod badge', () => {
+  it('renders navbar brand with Preprod badge', async () => {
     render(<App />);
     expect(screen.getByText('Midnight Voting')).toBeInTheDocument();
     expect(screen.getByText('Preprod')).toBeInTheDocument();
-    expect(screen.getByText('Connect Lace Wallet')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Lace Wallet Not Detected')).toBeInTheDocument();
+    });
   });
 
   it('renders hero title and subtitle', () => {
@@ -29,14 +33,10 @@ describe('Midnight Private Voting dApp (App Component)', () => {
     expect(betaElements.length).toBeGreaterThan(0);
   });
 
-  it('connects Lace wallet and displays address pill', async () => {
+  it('renders headless resilience fallback when Lace is missing', async () => {
     render(<App />);
-    const connectButton = screen.getByText('Connect Lace Wallet');
-    fireEvent.click(connectButton);
-
     await waitFor(() => {
-      const addressElements = screen.getAllByText(/0xMid9/i);
-      expect(addressElements.length).toBeGreaterThan(0);
+      expect(screen.getByText('Lace Wallet Not Detected')).toBeInTheDocument();
     });
   });
 

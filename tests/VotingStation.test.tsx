@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import React from 'react';
 import { VotingStation } from '../src/components/VotingStation';
 import { WalletState } from '../src/services/walletConnector';
@@ -12,6 +13,8 @@ const mockWallet: WalletState = {
 };
 
 describe('VotingStation Component', () => {
+  afterEach(() => cleanup());
+
   it('renders candidates and handles candidate selection', () => {
     const handleCastVote = vi.fn().mockResolvedValue(undefined);
     render(
