@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles/midnight-theme.css';
 import { Navbar } from './components/Navbar';
 import { HeroPipeline } from './components/HeroPipeline';
@@ -7,6 +7,8 @@ import { LedgerTallyView } from './components/LedgerTallyView';
 import { ProofConsole, LogEntry } from './components/ProofConsole';
 import { TrustBadges } from './components/TrustBadges';
 import { MidnightWalletService, WalletState } from './services/walletConnector';
+import { contractService } from './services/contractService';
+import { ProofStep } from './types';
 
 export default function App() {
   const [wallet, setWallet] = useState<WalletState>({
@@ -15,6 +17,16 @@ export default function App() {
     network: 'preview',
     isMock: false,
   });
+
+  useEffect(() => {
+    // Auto-check for Lace presence on mount for headless resilience
+    const checkWallet = async () => {
+      const walletService = MidnightWalletService.getInstance();
+      const state = await walletService.connect();
+      setWallet(state);
+    };
+    checkWallet().catch(console.error);
+  }, []);
 
   const [tallyA, setTallyA] = useState<number>(42);
   const [tallyB, setTallyB] = useState<number>(38);
@@ -51,23 +63,32 @@ export default function App() {
   const handleCastVote = async (candidateId: number, voterSecret: string) => {
     setIsProving(true);
     addLog(`Initiating private ballot for Candidate ${candidateId === 1 ? 'Alpha' : 'Beta'}...`, 'info');
-    
-    // 1. Derive SHA-256 Nullifier locally
-    const simulatedNullifier = `0x${voterSecret.slice(0, 12)}...${voterSecret.slice(-4)}`;
-    addLog(`Derived local nullifier: ${simulatedNullifier}`, 'info');
 
-    // 2. Proof Generation
-    addLog('Executing Compact ZK Circuit (castVote.zkir)... Generating Zero-Knowledge Proof.', 'info');
-    const walletService = MidnightWalletService.getInstance();
-    const txHash = await walletService.generateProofAndSubmit(candidateId, simulatedNullifier);
+    try {
+      // Execute the real contract transaction flow
+      const { txHash, nullifier } = await contractService.submitVote(
+        candidateId === 1 ? 0 : 1, // Map UI candidate 1 to Compact 0 (Alpha), UI candidate 2 to Compact 1 (Beta)
+        voterSecret,
+        (steps: ProofStep[]) => {
+          const currentStep = steps.find((s: ProofStep) => s.status === 'running' || s.status === 'error');
+          if (currentStep) {
+            addLog(`${currentStep.title}: ${currentStep.description}`, currentStep.status === 'error' ? 'warn' : 'info');
+          }
+        }
+      );
 
-    // 3. Update public ledger state
-    if (candidateId === 1) setTallyA((prev) => prev + 1);
-    else setTallyB((prev) => prev + 1);
-    setNullifiers((prev) => [simulatedNullifier, ...prev]);
+      addLog(`ZK Proof verified on Midnight Preview! TxHash: ${txHash.slice(0, 16)}...`, 'success');
 
-    addLog(`ZK Proof verified on Midnight Preview! TxHash: ${txHash.slice(0, 16)}...`, 'success');
-    setIsProving(false);
+      // Refresh public ledger state
+      const state = contractService.getLedgerState();
+      setTallyA(state.totalVotesA);
+      setTallyB(state.totalVotesB);
+      setNullifiers(state.nullifiers);
+    } catch (err: any) {
+      addLog(`Execution Failed: ${err.message}`, 'warn');
+    } finally {
+      setIsProving(false);
+    }
   };
 
   return (

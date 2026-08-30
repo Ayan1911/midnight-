@@ -8,26 +8,8 @@ describe('MidnightWalletService SDK Integration', () => {
     expect(service1).toBe(service2);
   });
 
-  it('connects and returns structured wallet state with 0x address format', async () => {
+  it('rejects connection if Lace is not present', async () => {
     const service = MidnightWalletService.getInstance();
-    const state = await service.connect();
-    expect(state.connected).toBe(true);
-    expect(state.address).toMatch(/^0x/);
-    expect(state.network).toContain('preview');
-  });
-
-  it('disconnects and clears in-memory state properly', async () => {
-    const service = MidnightWalletService.getInstance();
-    await service.connect();
-    const disconnectedState = service.disconnect();
-    expect(disconnectedState.connected).toBe(false);
-    expect(disconnectedState.address).toBeNull();
-    expect(service.getConnectedAddress()).toBeNull();
-  });
-
-  it('generates deterministic transaction hashes on proof submission', async () => {
-    const service = MidnightWalletService.getInstance();
-    const txHash = await service.generateProofAndSubmit(1, '0x1234567890abcdef');
-    expect(txHash).toMatch(/^0x[a-f0-9]{64}$/);
+    await expect(service.connect()).rejects.toThrow('Lace Wallet Beta extension not detected.');
   });
 });

@@ -7,6 +7,7 @@ export interface WalletState {
   address: string | null;
   network: string;
   isMock: boolean;
+  error?: string;
 }
 
 export class MidnightWalletService {
@@ -28,35 +29,37 @@ export class MidnightWalletService {
   /**
    * Connects to the Midnight Lace Beta Wallet extension via DApp Connector.
    * Retrieves user change address and initializes ProofProvider.
+   * STRICTLY ENFORCES REAL LACE EXTENSION (No mocks).
    */
   public async connect(): Promise<WalletState> {
     const midnight = (window as unknown as { midnight?: { mnLace?: { enable: () => Promise<DAppConnectorWalletAPI> } } })?.midnight;
 
-    if (midnight && midnight.mnLace) {
-      try {
-        this.api = await midnight.mnLace.enable();
-        const rawAddress = (await (this.api as unknown as { getChangeAddress?: () => Promise<string> }).getChangeAddress?.()) || '0xMid9...a7F2c';
-        this.connectedAddress = rawAddress;
-        
-        return {
-          connected: true,
-          address: `${rawAddress.slice(0, 6)}...${rawAddress.slice(-4)}`,
-          network: 'preview',
-          isMock: false,
-        };
-      } catch (err) {
-        console.warn('Lace DApp connector rejected, falling back to simulated session for local dev:', err);
-      }
+    if (!midnight || !midnight.mnLace) {
+      return {
+        connected: false,
+        address: null,
+        network: 'preview',
+        isMock: false,
+        error: 'LACE_NOT_FOUND',
+      };
     }
 
-    // Fallback for development & CI testing without physical browser extension
-    this.connectedAddress = '0xMid9...88F1a';
-    return {
-      connected: true,
-      address: '0xMid9...88F1a',
-      network: 'preview (simulated)',
-      isMock: true,
-    };
+    try {
+      this.api = await midnight.mnLace.enable();
+      // Using standard DApp Connector interface
+      const rawAddress = (await (this.api as unknown as { getChangeAddress?: () => Promise<string> }).getChangeAddress?.()) || 'mn_preview...';
+      this.connectedAddress = rawAddress;
+      
+      return {
+        connected: true,
+        address: `${rawAddress.slice(0, 10)}...${rawAddress.slice(-6)}`,
+        network: 'preview',
+        isMock: false,
+      };
+    } catch (err) {
+      console.error('Failed to connect to Lace Wallet:', err);
+      throw new Error('Lace Wallet connection was rejected or failed.');
+    }
   }
 
   /** Alias for connect */
@@ -81,7 +84,12 @@ export class MidnightWalletService {
     };
   }
 
+  public getApi(): DAppConnectorWalletAPI | null {
+    return this.api;
+  }
+
   public getProofProvider(): ProofProvider | null {
+    // In actual implementation this is provided by wallet-api or dapp-connector
     return this.proofProvider;
   }
 
@@ -91,17 +99,6 @@ export class MidnightWalletService {
 
   public getConnectedAddress(): string | null {
     return this.connectedAddress;
-  }
-
-  /**
-   * Generates Zero-Knowledge proof and submits transaction to Midnight Ledger.
-   */
-  public async generateProofAndSubmit(candidateId: number, nullifier: string): Promise<string> {
-    // Simulates off-chain witness execution & ZK proof generation
-    await new Promise((res) => setTimeout(res, 1200));
-
-    // Return deterministic on-chain transaction hash format
-    return `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
   }
 }
 

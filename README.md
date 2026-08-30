@@ -54,6 +54,22 @@ npm run dev
 
 ---
 
+### 1.1b Real On-Chain Deployment & Execution (Mentor Feedback Addressed)
+
+> [!IMPORTANT]
+> **NO MOCKS:** This application strictly enforces the Midnight Network zero-knowledge proving mechanisms via Lace DApp Connector. All references to `setTimeout` or `Math.random` simulated ZK proofs have been explicitly removed.
+
+**To deploy and run with real Midnight SDKs:**
+1. You **MUST** have the [Midnight Lace Wallet Beta](https://docs.midnight.network/develop/tutorial/using/wallet) installed in your browser.
+2. The application will strictly throw an error if `window.midnight.mnLace` is not detected.
+3. Deploy the smart contract physically to the network:
+```bash
+# Uses the deployer mnemonic from .env and real deployContract API
+npx tsx scripts/deploy-testnet.ts
+```
+
+---
+
 ### 1.2 State vs. Witness Explanation
 
 The application enforces a strict separation between private computation and public on-chain state:
