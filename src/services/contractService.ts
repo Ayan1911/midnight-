@@ -223,7 +223,7 @@ export class ContractService {
           'castVote',
           { bytes: new Uint8Array(32) } as any,
           { bytes: new Uint8Array(32) } as any,
-          this.contractInstance.initialState({}).state,
+          this.contractInstance.initialState({ initialPrivateState: {} }).state,
           {}
         );
 
