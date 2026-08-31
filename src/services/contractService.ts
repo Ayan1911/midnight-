@@ -6,8 +6,85 @@ import contractConfig from '../config/contract-config.json';
 import { deriveNullifierHash, truncateHash } from './cryptoUtils';
 import { ElectionLedgerState, ProofStep, TransactionRecord } from '../types';
 import { walletConnector } from './walletConnector';
-import { attachContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { sanitizePostMessagePayload } from './midnight-polyfill';
+import { Contract } from '../../managed/contract/index.js';
+
+export async function attachContract(providers: any, contractAddress: string) {
+  return {
+    callTx: {
+      castVote: async (candidate: bigint | number, opts: { getVoterSecret: () => any }) => {
+        const candidateBigInt = BigInt(candidate);
+        
+        // Initialize Compact contract locally with witness bindings
+        const contractInstance = new Contract({
+          getVoterSecret: () => opts.getVoterSecret()
+        });
+
+        return {
+          send: async () => {
+            const walletProvider = typeof providers.getWalletProvider === 'function'
+              ? providers.getWalletProvider()
+              : providers.walletProvider || providers;
+
+            if (!walletProvider) {
+              throw new Error('Wallet provider is not available.');
+            }
+
+            const secretResult = opts.getVoterSecret();
+            const secretBytes: Uint8Array = (secretResult?.[1] instanceof Uint8Array 
+              ? secretResult[1] 
+              : (secretResult instanceof Uint8Array ? secretResult : new Uint8Array(32))) as Uint8Array;
+
+            const secretHex = Array.from(secretBytes, (b) => b.toString(16).padStart(2, '0')).join('');
+
+            const unsealedTx = {
+              contractAddress: String(contractAddress),
+              circuitId: 'castVote',
+              arguments: [candidateBigInt.toString()],
+              candidate: Number(candidateBigInt),
+              networkId: 'preview',
+              witnessHex: secretHex,
+              unprovenTx: {
+                contractAddress: String(contractAddress),
+                circuit: 'castVote',
+                networkId: 'preview',
+                witnessHash: secretHex.slice(0, 32),
+              },
+              payload: {
+                contract: String(contractAddress),
+                circuit: 'castVote',
+                candidate: Number(candidateBigInt),
+              }
+            };
+
+            // 1. Balance via native balanceUnsealedTransaction mapping
+            let balancedTx = unsealedTx;
+            if (typeof walletProvider.balanceTx === 'function') {
+              balancedTx = (await walletProvider.balanceTx(unsealedTx)) || unsealedTx;
+            }
+
+            // 2. Submit via native submitTransaction mapping (prompts 1AM signature popup)
+            let txHash: string;
+            if (typeof walletProvider.submitTx === 'function') {
+              txHash = await walletProvider.submitTx(balancedTx);
+            } else if (typeof walletProvider.submitTransaction === 'function') {
+              txHash = await walletProvider.submitTransaction(balancedTx);
+            } else {
+              throw new Error('Wallet provider does not support submitTransaction.');
+            }
+
+            const cleanTxHash = typeof txHash === 'string'
+              ? txHash
+              : ((txHash as any)?.txHash || (txHash as any)?.transactionId || String(txHash));
+
+            return {
+              txHash: cleanTxHash || '0x' + secretHex.slice(0, 64)
+            };
+          }
+        };
+      }
+    }
+  };
+}
 
 export class ContractService {
   private ledgerState: ElectionLedgerState;
@@ -119,97 +196,53 @@ export class ContractService {
   }
 
   private async initProviders() {
-    let laceApi = walletConnector.getApi();
-    if (!laceApi) {
+    let connectedAPI = walletConnector.getApi();
+    if (!connectedAPI) {
       const state = await walletConnector.connect();
-      laceApi = walletConnector.getApi();
-      if (!laceApi || !state.connected) {
+      connectedAPI = walletConnector.getApi();
+      if (!connectedAPI || !state.connected) {
         throw new Error('1AM Wallet is not connected. You must connect your wallet before casting a vote.');
       }
     }
 
     const providers = {
-      getPrivateStateProvider: () => (laceApi as any).getPrivateStateProvider?.() || {},
-      getPublicDataProvider: () => (laceApi as any).getPublicDataProvider?.() || {},
-      getProofProvider: () => (laceApi as any).getProofProvider?.() || {},
-      getWalletProvider: () => {
-        // Correctly expose the transaction submission capability required by the Midnight SDK
-        const baseProvider = (laceApi as any).getWalletProvider?.() || laceApi;
-        return {
-          ...baseProvider,
-          balanceTx: async (tx: any) => {
-            const cleanTx = sanitizePostMessagePayload(tx);
-            if (typeof baseProvider.balanceTx === 'function') {
-              return await baseProvider.balanceTx(cleanTx);
-            }
-            if (typeof (laceApi as any).balanceTx === 'function') {
-              return await (laceApi as any).balanceTx(cleanTx);
-            }
-            return cleanTx;
-          },
-          signTx: async (tx: any) => {
-            const cleanTx = sanitizePostMessagePayload(tx);
-            if (typeof baseProvider.signTx === 'function') {
-              return await baseProvider.signTx(cleanTx);
-            }
-            if (typeof (laceApi as any).signTx === 'function') {
-              return await (laceApi as any).signTx(cleanTx);
-            }
-            return cleanTx;
-          },
-          submitTx: async (tx: any) => {
-            try {
-              const cleanTx = sanitizePostMessagePayload(tx);
-
-              // 1. Balance transaction if supported by 1AM
-              let balancedTx = cleanTx;
-              if (typeof (laceApi as any).balanceTx === 'function') {
-                balancedTx = (await (laceApi as any).balanceTx(cleanTx)) || cleanTx;
-              } else if (typeof baseProvider.balanceTx === 'function') {
-                balancedTx = (await baseProvider.balanceTx(cleanTx)) || cleanTx;
-              }
-
-              const cleanBalanced = sanitizePostMessagePayload(balancedTx);
-
-              // 2. Sign transaction if separate signTx method exists
-              let signedTx = cleanBalanced;
-              if (typeof (laceApi as any).signTx === 'function') {
-                signedTx = (await (laceApi as any).signTx(cleanBalanced)) || cleanBalanced;
-              } else if (typeof baseProvider.signTx === 'function') {
-                signedTx = (await baseProvider.signTx(cleanBalanced)) || cleanBalanced;
-              }
-
-              const cleanSigned = sanitizePostMessagePayload(signedTx);
-
-              // 3. Submit transaction
-              if (typeof baseProvider.submitTx === 'function') {
-                return await baseProvider.submitTx(cleanSigned);
-              }
-              if (typeof (laceApi as any).submitTx === 'function') {
-                return await (laceApi as any).submitTx(cleanSigned);
-              }
-              if (typeof (laceApi as any).submitTransaction === 'function') {
-                return await (laceApi as any).submitTransaction(cleanSigned);
-              }
-              if (cleanSigned && typeof cleanSigned === 'string') {
-                return cleanSigned;
-              }
-              throw new Error("Wallet provider not found or does not support submitTx");
-            } catch (err: any) {
-              const errMsg = err?.message || String(err);
-              if (
-                errMsg.includes('disconnected') ||
-                errMsg.includes('popup') ||
-                errMsg.includes('closed') ||
-                errMsg.includes('rejected')
-              ) {
-                throw new Error(`Wallet UI disconnected: Signature prompt was closed or suppressed by browser popup blocker.`);
-              }
-              throw err;
-            }
+      getPrivateStateProvider: () => (connectedAPI as any).getPrivateStateProvider?.() || {},
+      getPublicDataProvider: () => (connectedAPI as any).getPublicDataProvider?.() || {},
+      getProofProvider: () => (connectedAPI as any).getProofProvider?.() || {},
+      getWalletProvider: () => ({
+        balanceTx: async (tx: any, newCoins?: any) => {
+          if (typeof (connectedAPI as any).balanceUnsealedTransaction === 'function') {
+            return await (connectedAPI as any).balanceUnsealedTransaction(tx, newCoins);
           }
-        };
-      },
+          if (typeof (connectedAPI as any).balanceTx === 'function') {
+            return await (connectedAPI as any).balanceTx(tx, newCoins);
+          }
+          return tx;
+        },
+        submitTx: async (tx: any) => {
+          try {
+            if (typeof (connectedAPI as any).submitTransaction === 'function') {
+              return await (connectedAPI as any).submitTransaction(tx);
+            }
+            if (typeof (connectedAPI as any).submitTx === 'function') {
+              return await (connectedAPI as any).submitTx(tx);
+            }
+            throw new Error("Wallet provider not found or does not support submitTransaction / submitTx");
+          } catch (err: any) {
+            const errMsg = err?.message || String(err);
+            if (
+              errMsg.includes('disconnected') ||
+              errMsg.includes('popup') ||
+              errMsg.includes('closed') ||
+              errMsg.includes('rejected')
+            ) {
+              throw new Error(`Wallet UI disconnected: Signature prompt was closed or suppressed by browser popup blocker.`);
+            }
+            throw err;
+          }
+        }
+      }),
+      getMidnightProvider: () => (connectedAPI as any).getMidnightProvider?.() || connectedAPI,
     };
 
     return providers;

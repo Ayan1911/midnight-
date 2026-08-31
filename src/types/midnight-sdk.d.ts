@@ -1,9 +1,12 @@
 declare module '@midnight-ntwrk/dapp-connector-api' {
   export interface DAppConnectorWalletAPI {
     enable(): Promise<DAppConnectorWalletAPI>;
+    connect?(network: string): Promise<DAppConnectorWalletAPI>;
     getChangeAddress(): Promise<string>;
     getNetworkId(): Promise<string>;
-    submitTx(txData: Uint8Array | string): Promise<string>;
+    balanceUnsealedTransaction(tx: any, newCoins?: any): Promise<any>;
+    submitTransaction(tx: any): Promise<string>;
+    submitTx?(txData: Uint8Array | string): Promise<string>;
   }
 
   export interface MidnightDAppConnector {

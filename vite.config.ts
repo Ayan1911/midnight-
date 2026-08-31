@@ -13,7 +13,6 @@ export default defineConfig({
       '@midnightntwrk/onchain-runtime-v4'
     ],
     alias: {
-      '@midnight-ntwrk/midnight-js-contracts': '/src/services/midnight-polyfill.ts',
       '@midnight-ntwrk/compact-runtime': path.resolve(__dirname, 'node_modules/@midnight-ntwrk/compact-runtime/dist/index.js'),
       '@midnightntwrk/onchain-runtime-v4': path.resolve(__dirname, 'node_modules/@midnightntwrk/onchain-runtime-v4/midnight_onchain_runtime_wasm.js')
     }
