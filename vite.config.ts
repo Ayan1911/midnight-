@@ -4,11 +4,18 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import wasm from 'vite-plugin-wasm';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import path from 'path';
 
 export default defineConfig({
   resolve: {
+    dedupe: [
+      '@midnight-ntwrk/compact-runtime',
+      '@midnightntwrk/onchain-runtime-v4'
+    ],
     alias: {
-      '@midnight-ntwrk/midnight-js-contracts': '/src/services/midnight-polyfill.ts'
+      '@midnight-ntwrk/midnight-js-contracts': '/src/services/midnight-polyfill.ts',
+      '@midnight-ntwrk/compact-runtime': path.resolve(__dirname, 'node_modules/@midnight-ntwrk/compact-runtime/dist/index.js'),
+      '@midnightntwrk/onchain-runtime-v4': path.resolve(__dirname, 'node_modules/@midnightntwrk/onchain-runtime-v4/midnight_onchain_runtime_wasm.js')
     }
   },
   plugins: [
