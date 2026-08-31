@@ -50,6 +50,7 @@ declare module '@midnight-ntwrk/midnight-js-contracts' {
     contractAddress: string;
     networkId: string;
   }
+  export function attachContract(providers: any, address: string): Promise<any>;
 }
 
 interface Window {
