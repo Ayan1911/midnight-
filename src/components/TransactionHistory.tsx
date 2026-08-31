@@ -44,11 +44,11 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({ transact
             <div className="flex items-center gap-3 text-[11px] font-mono text-zinc-400">
               <span>{tx.timestamp}</span>
               <a
-                href={`https://explorer.1am.xyz/tx/${tx.txHash}?network=preview`}
+                href={`https://explorer.preview.midnight.network/tx/${tx.txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white transition-colors"
-                title="View on 1AM Preview Explorer"
+                title="View on Midnight Preview Explorer"
               >
                 <ExternalLink className="w-3 h-3" />
               </a>

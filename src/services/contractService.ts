@@ -53,7 +53,7 @@ export async function attachContract(providers: any, contractAddress: string) {
     callTx: {
       castVote: async (candidate: bigint | number, opts: { getVoterSecret: () => any }) => {
         const candidateBigInt = BigInt(candidate);
-        
+
         // Initialize Compact contract locally with witness bindings
         const contractInstance = new Contract({
           getVoterSecret: () => opts.getVoterSecret()
@@ -70,8 +70,8 @@ export async function attachContract(providers: any, contractAddress: string) {
             }
 
             const secretResult = opts.getVoterSecret();
-            const secretBytes: Uint8Array = (secretResult?.[1] instanceof Uint8Array 
-              ? secretResult[1] 
+            const secretBytes: Uint8Array = (secretResult?.[1] instanceof Uint8Array
+              ? secretResult[1]
               : (secretResult instanceof Uint8Array ? secretResult : new Uint8Array(32))) as Uint8Array;
 
             const secretHex = Array.from(secretBytes, (b) => b.toString(16).padStart(2, '0')).join('');
@@ -374,12 +374,12 @@ export class ContractService {
     let txHash = '';
     try {
       const providers = await this.initProviders();
-      
+
       this.contractInstance = await attachContract(
         providers as any,
         contractConfig.contractAddress
       );
-      
+
       if (this.contractInstance?.callTx?.castVote) {
         steps[1].status = 'completed';
         steps[1].details = `Circuit constraints verified. Target candidate: #${candidate}`;
@@ -399,7 +399,7 @@ export class ContractService {
             getVoterSecret: () => [{}, paddedSecret]
           }
         );
-        
+
         steps[2].status = 'completed';
         steps[2].details = `ZK-SNARK proof synthesized successfully.`;
         // Wait for user to sign transaction in 1AM Wallet popup
@@ -410,14 +410,14 @@ export class ContractService {
 
         const txResult = await tx.send ? await tx.send() : tx;
         txHash = txResult.txHash || txResult.transactionId || txResult.id;
-        
+
       } else {
         // Fallback safety
         throw new Error("Contract circuits are unavailable.");
       }
     } catch (err: any) {
       console.error("ZK Circuit Execution Failed:", err);
-      const isPopupOrDisconnectError = 
+      const isPopupOrDisconnectError =
         err.message?.includes('Wallet UI disconnected') ||
         err.message?.includes('disconnected') ||
         err.message?.includes('popup') ||
@@ -425,8 +425,8 @@ export class ContractService {
         err.message?.includes('rejected');
 
       steps[1].status = 'error';
-      steps[1].details = isPopupOrDisconnectError 
-        ? '1AM Wallet popup was suppressed or closed by browser popup blocker.' 
+      steps[1].details = isPopupOrDisconnectError
+        ? '1AM Wallet popup was suppressed or closed by browser popup blocker.'
         : (err.message || 'Circuit execution failed');
       steps[2].status = 'error';
       steps[3].status = 'error';

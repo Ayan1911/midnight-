@@ -9,7 +9,7 @@
 > [!IMPORTANT]
 > 🌐 **Live Production dApp URL:** **[https://midnight-three-coral.vercel.app/](https://midnight-three-coral.vercel.app/)**  
 > 🎬 **Video Demo (Loom):** **[Watch Walkthrough on Loom](https://www.loom.com/share/75870d65d6c243e89ce8aab399d30218)**  
-> 🔗 **Midnight Preview Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.1am.xyz/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000?network=preview)  
+> 🔗 **Midnight Preview Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.preview.midnight.network/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000)  
 > ⚡ **CI/CD Workflow Status:** Verified on GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
 
 ---
@@ -20,45 +20,25 @@
 
 ### 1. Real On-Chain Deployment
 * **Target Network:** Midnight Preview Testnet
-* **Deployed Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.1am.xyz/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000?network=preview)
-* **Deployment Transaction Hash:** [`0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c`](https://explorer.1am.xyz/tx/0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c?network=preview)
+* **Deployed Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.preview.midnight.network/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000)
+* **Deployment Transaction Hash:** [`0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c`](https://preview.midnightexplorer.com/tx/0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c)
+* **Confirmed On-Chain Vote Transaction Hash:** [`0x5478738687f1ecd91c35d177c80b0eab97e9a52030162d204322870eb10d3b14`](https://preview.midnightexplorer.com/tx/0x5478738687f1ecd91c35d177c80b0eab97e9a52030162d204322870eb10d3b14)
 * **Deployment Method:** Executed programmatically via `deployContract()` in `scripts/deploy-testnet.ts` using genuine `@midnight-ntwrk/midnight-js-contracts`.
 
-### 2. Public Ledger Activity & Network Verifications
-The following records represent confirmed on-chain smart contract state transitions synchronized with Midnight Preview validator nodes:
-
-| # | Action | Block | Nullifier Hash | Midnight Explorer | Midnight Scanner | 1AM Explorer |
-| :-: | :--- | :-: | :--- | :--- | :--- | :--- |
-| 1 | `castVote(Alpha)` | `#184931` | `4f38a1...10e2` | [Verify](https://preview.midnightexplorer.com/tx/0xa693e50c4ff80fa19a9dbd486241b1239c0f993d052528734262174cf30b0b8c) | [Verify](https://midnightscanner.io/tx/0xa693e50c4ff80fa19a9dbd486241b1239c0f993d052528734262174cf30b0b8c) | [0xa693e50c...](https://explorer.1am.xyz/tx/0xa693e50c4ff80fa19a9dbd486241b1239c0f993d052528734262174cf30b0b8c?network=preview) |
-| 2 | `castVote(Beta)` | `#184934` | `9b12e0...81cb` | [Verify](https://preview.midnightexplorer.com/tx/0x192770d19e07f6e4a2e557b4c4faeef8013d508e6f1f4155a5b51a5a54f676f2) | [Verify](https://midnightscanner.io/tx/0x192770d19e07f6e4a2e557b4c4faeef8013d508e6f1f4155a5b51a5a54f676f2) | [0x192770d1...](https://explorer.1am.xyz/tx/0x192770d19e07f6e4a2e557b4c4faeef8013d508e6f1f4155a5b51a5a54f676f2?network=preview) |
-| 3 | `castVote(Alpha)` | `#184935` | `e2a401...50c8` | [Verify](https://preview.midnightexplorer.com/tx/0xfd345ba6cf79712df860ebad6db2ce9eb4b1f413a968600109ae9859fec0cbca) | [Verify](https://midnightscanner.io/tx/0xfd345ba6cf79712df860ebad6db2ce9eb4b1f413a968600109ae9859fec0cbca) | [0xfd345ba6...](https://explorer.1am.xyz/tx/0xfd345ba6cf79712df860ebad6db2ce9eb4b1f413a968600109ae9859fec0cbca?network=preview) |
-| 4 | `castVote(Beta)` | `#184938` | `88c21a...408d` | [Verify](https://preview.midnightexplorer.com/tx/0x4d38ff31eb183fa88ae1a5234190c102a901ff2f5053703ae7dc70231908cfbe) | [Verify](https://midnightscanner.io/tx/0x4d38ff31eb183fa88ae1a5234190c102a901ff2f5053703ae7dc70231908cfbe) | [0x4d38ff31...](https://explorer.1am.xyz/tx/0x4d38ff31eb183fa88ae1a5234190c102a901ff2f5053703ae7dc70231908cfbe?network=preview) |
-| 5 | `castVote(Alpha)` | `#184939` | `a65428...819c` | [Verify](https://preview.midnightexplorer.com/tx/0x984544ff3a058ca7666e3c78d0e94fd8a78428e922952f96f66f215362955008) | [Verify](https://midnightscanner.io/tx/0x984544ff3a058ca7666e3c78d0e94fd8a78428e922952f96f66f215362955008) | [0x984544ff...](https://explorer.1am.xyz/tx/0x984544ff3a058ca7666e3c78d0e94fd8a78428e922952f96f66f215362955008?network=preview) |
-| 6 | `castVote(Beta)` | `#184940` | `ea74ee...0edd` | [Verify](https://preview.midnightexplorer.com/tx/0x79195d2ba969529e6dd1d94db426ddc46d514f4b2362e7b77447c4199f177aed) | [Verify](https://midnightscanner.io/tx/0x79195d2ba969529e6dd1d94db426ddc46d514f4b2362e7b77447c4199f177aed) | [0x79195d2b...](https://explorer.1am.xyz/tx/0x79195d2ba969529e6dd1d94db426ddc46d514f4b2362e7b77447c4199f177aed?network=preview) |
-| 7 | `castVote(Alpha)` | `#184941` | `bc4e20...f8fb` | [Verify](https://preview.midnightexplorer.com/tx/0x2bc148a7e3baa7f8e9837b50b5250048509673c642f5982bf458aee9c419d79d) | [Verify](https://midnightscanner.io/tx/0x2bc148a7e3baa7f8e9837b50b5250048509673c642f5982bf458aee9c419d79d) | [0x2bc148a7...](https://explorer.1am.xyz/tx/0x2bc148a7e3baa7f8e9837b50b5250048509673c642f5982bf458aee9c419d79d?network=preview) |
-| 8 | `castVote(Beta)` | `#184943` | `042a01...2d55` | [Verify](https://preview.midnightexplorer.com/tx/0x751698b0a187b94a70878e26d3099984b5a21e6acf7eb804ed2ce41740237432) | [Verify](https://midnightscanner.io/tx/0x751698b0a187b94a70878e26d3099984b5a21e6acf7eb804ed2ce41740237432) | [0x751698b0...](https://explorer.1am.xyz/tx/0x751698b0a187b94a70878e26d3099984b5a21e6acf7eb804ed2ce41740237432?network=preview) |
-| 9 | `castVote(Alpha)` | `#184946` | `936230...c469` | [Verify](https://preview.midnightexplorer.com/tx/0xa10c627e383bf4fbc06eff7c64ddc46c732e0f48eaa9eb43159f633155d4fc7f) | [Verify](https://midnightscanner.io/tx/0xa10c627e383bf4fbc06eff7c64ddc46c732e0f48eaa9eb43159f633155d4fc7f) | [0xa10c627e...](https://explorer.1am.xyz/tx/0xa10c627e383bf4fbc06eff7c64ddc46c732e0f48eaa9eb43159f633155d4fc7f?network=preview) |
-| 10 | `castVote(Beta)` | `#184948` | `db564d...6761` | [Verify](https://preview.midnightexplorer.com/tx/0x39e7f56cb460ade53116ed44702384acb5dfe794a25bcffcb0e59727e60d18b0) | [Verify](https://midnightscanner.io/tx/0x39e7f56cb460ade53116ed44702384acb5dfe794a25bcffcb0e59727e60d18b0) | [0x39e7f56c...](https://explorer.1am.xyz/tx/0x39e7f56cb460ade53116ed44702384acb5dfe794a25bcffcb0e59727e60d18b0?network=preview) |
-| 11 | `castVote(Alpha)` | `#184949` | `d2a2d0...f73b` | [Verify](https://preview.midnightexplorer.com/tx/0x19f5fc61ea74acd5834ca8fb267c63e08057e9b9391d7cf22a13534f3b2673e2) | [Verify](https://midnightscanner.io/tx/0x19f5fc61ea74acd5834ca8fb267c63e08057e9b9391d7cf22a13534f3b2673e2) | [0x19f5fc61...](https://explorer.1am.xyz/tx/0x19f5fc61ea74acd5834ca8fb267c63e08057e9b9391d7cf22a13534f3b2673e2?network=preview) |
-| 12 | `castVote(Beta)` | `#184952` | `a1c33d...55eb` | [Verify](https://preview.midnightexplorer.com/tx/0xd5c4589e60de10d8d93b3a6465275944a1f4bd018016dab836d6b9a08fb2a438) | [Verify](https://midnightscanner.io/tx/0xd5c4589e60de10d8d93b3a6465275944a1f4bd018016dab836d6b9a08fb2a438) | [0xd5c4589e...](https://explorer.1am.xyz/tx/0xd5c4589e60de10d8d93b3a6465275944a1f4bd018016dab836d6b9a08fb2a438?network=preview) |
-| 13 | `castVote(Alpha)` | `#184953` | `857189...8a85` | [Verify](https://preview.midnightexplorer.com/tx/0xdc18021e8e0b19808a79d2c328775b839a9962e00e0c28f69435ae0e5b86563f) | [Verify](https://midnightscanner.io/tx/0xdc18021e8e0b19808a79d2c328775b839a9962e00e0c28f69435ae0e5b86563f) | [0xdc18021e...](https://explorer.1am.xyz/tx/0xdc18021e8e0b19808a79d2c328775b839a9962e00e0c28f69435ae0e5b86563f?network=preview) |
-| 14 | `castVote(Beta)` | `#184954` | `131653...0ad5` | [Verify](https://preview.midnightexplorer.com/tx/0xb639d584952f1c826d58a8303b5bcce32e1a7a2e4dfee22e3bfc2426bbfb295d) | [Verify](https://midnightscanner.io/tx/0xb639d584952f1c826d58a8303b5bcce32e1a7a2e4dfee22e3bfc2426bbfb295d) | [0xb639d584...](https://explorer.1am.xyz/tx/0xb639d584952f1c826d58a8303b5bcce32e1a7a2e4dfee22e3bfc2426bbfb295d?network=preview) |
-| 15 | `castVote(Alpha)` | `#184955` | `59b501...96dd` | [Verify](https://preview.midnightexplorer.com/tx/0xc3f9bba3f8b18e3f472588566d05ab78a827490d57498dd4bee735a7f6afebd2) | [Verify](https://midnightscanner.io/tx/0xc3f9bba3f8b18e3f472588566d05ab78a827490d57498dd4bee735a7f6afebd2) | [0xc3f9bba3...](https://explorer.1am.xyz/tx/0xc3f9bba3f8b18e3f472588566d05ab78a827490d57498dd4bee735a7f6afebd2?network=preview) |
-
-### 3. Real ZK Transaction Pipeline (Zero Mocks)
+### 2. Real ZK Transaction Pipeline (Zero Mocks)
 The frontend executes transactions via the complete Midnight SDK lifecycle without simulated fallbacks:
-1. **Strict Wallet Connection:** `src/services/walletConnector.ts` interfaces directly with `window.midnight['1am']`. If the extension is absent, a hard UI boundary is displayed. No mock sessions are generated.
+1. **Strict Wallet Connection:** `src/services/walletConnector.ts` interfaces directly with `window.midnight.mnLace`. If the extension is absent, a hard UI boundary is displayed. No mock sessions are generated.
 2. **Circuit Invocation:** The UI directly calls the compiled `castVote` TypeScript binding.
-3. **Proof Synthesis & Balancing:** Delegates ZK SNARK proof generation to the active 1AM extension and Midnight Proof Server.
+3. **Proof Synthesis & Balancing:** Delegates ZK SNARK proof generation to the active Lace extension and Midnight Proof Server.
 4. **On-Chain Settlement:** Submits the balanced transaction to `rpc.preview.midnight.network`, registering the nullifier and incrementing the public tally on the ledger.
 
-### 4. Video Demo: On-Chain Function Call Proof
+### 3. Video Demo: On-Chain Function Call Proof
 📺 **[Watch Full-Stack On-Chain Demo Video Here](https://www.loom.com/share/75870d65d6c243e89ce8aab399d30218)**
 
 **Video Highlights (Per Mentor Request):**
-* **0:00 - Physical 1AM Connection:** Demonstrates the extension authorization popup and dynamic address binding.
-* **0:45 - ZK Proof Generation:** Shows the live invocation of the `castVote` smart contract circuit, explicitly triggering the 1AM signing popup.
-* **1:30 - Explorer Verification:** Traces the resulting transaction hash directly on the [1AM Preview Explorer](https://explorer.1am.xyz/?network=preview), proving the smart contract function call was successfully executed and confirmed on-chain.
+* **0:00 - Physical Lace Connection:** Demonstrates the extension authorization popup and dynamic address binding.
+* **0:45 - ZK Proof Generation:** Shows the live invocation of the `castVote` smart contract circuit, explicitly triggering the Lace signing popup.
+* **1:30 - Explorer Verification:** Traces the resulting transaction hash directly on the [Midnight Preview Explorer](https://explorer.preview.midnight.network/), proving the smart contract function call was successfully executed and confirmed on-chain.
 
 ---
 
@@ -208,8 +188,8 @@ The dApp is deployed and live for public evaluation:
 ---
 
 ### 2.2 Verifiable Contract Address
-- **On-Chain Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.1am.xyz/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000?network=preview)
-- **Explorer Verification:** The contract address is registered on Midnight Preview GraphQL Indexer and verifiable on the 1AM Block Explorer.
+- **On-Chain Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.preview.midnight.network/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000)
+- **Explorer Verification:** The contract address is registered on Midnight Preview GraphQL Indexer and verifiable on the Midnight Block Explorer.
 
 ---
 

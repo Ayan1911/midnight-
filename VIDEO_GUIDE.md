@@ -38,7 +38,7 @@ To prove to the Midnight Network Mentors that your application relies entirely o
 
 ### Step 4: Explorer Verification
 1. Copy the `TxHash` from the success notification.
-2. Open [https://explorer.1am.xyz/?network=preview](https://explorer.1am.xyz/?network=preview).
+2. Open [https://explorer.preview.midnight.network](https://explorer.preview.midnight.network).
 3. Paste the transaction hash into the search bar.
 4. Show the confirmed transaction on the public block explorer, proving that no user identity or choice is visible in the transaction payload.
 
