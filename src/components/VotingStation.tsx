@@ -92,7 +92,7 @@ export const VotingStation: React.FC<VotingStationProps> = ({ wallet, onCastVote
         disabled={!wallet.connected || isProving}
         onClick={handleSubmit}
       >
-        {isProving ? 'Generating ZK Proof...' : wallet.connected ? 'Cast Private Vote' : 'Connect Lace Wallet to Vote'}
+        {isProving ? 'Generating ZK Proof...' : wallet.connected ? 'Cast Private Vote' : 'Connect 1am Wallet to Vote'}
       </button>
     </div>
   );

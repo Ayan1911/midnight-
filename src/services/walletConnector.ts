@@ -27,25 +27,25 @@ export class MidnightWalletService {
   }
 
   /**
-   * Connects to the Midnight Lace Beta Wallet extension via DApp Connector.
+   * Connects to the Midnight 1am Wallet extension via DApp Connector.
    * Retrieves user change address and initializes ProofProvider.
-   * STRICTLY ENFORCES REAL LACE EXTENSION (No mocks).
+   * STRICTLY ENFORCES REAL 1AM EXTENSION (No mocks).
    */
   public async connect(): Promise<WalletState> {
-    const midnight = (window as unknown as { midnight?: { mnLace?: { enable: () => Promise<DAppConnectorWalletAPI> } } })?.midnight;
+    const midnight = (window as unknown as { midnight?: { mn1am?: { enable: () => Promise<DAppConnectorWalletAPI> } } })?.midnight;
 
-    if (!midnight || !midnight.mnLace) {
+    if (!midnight || !midnight.mn1am) {
       return {
         connected: false,
         address: null,
         network: 'preview',
         isMock: false,
-        error: 'LACE_NOT_FOUND',
+        error: '1AM_NOT_FOUND',
       };
     }
 
     try {
-      this.api = await midnight.mnLace.enable();
+      this.api = await midnight.mn1am.enable();
       // Using standard DApp Connector interface
       const rawAddress = (await (this.api as unknown as { getChangeAddress?: () => Promise<string> }).getChangeAddress?.()) || 'mn_preview...';
       this.connectedAddress = rawAddress;
@@ -57,13 +57,13 @@ export class MidnightWalletService {
         isMock: false,
       };
     } catch (err) {
-      console.error('Failed to connect to Lace Wallet:', err);
-      throw new Error('Lace Wallet connection was rejected or failed.');
+      console.error('Failed to connect to 1am Wallet:', err);
+      throw new Error('1am Wallet connection was rejected or failed.');
     }
   }
 
   /** Alias for connect */
-  public async connectLace(): Promise<WalletState> {
+  public async connect1am(): Promise<WalletState> {
     return this.connect();
   }
 

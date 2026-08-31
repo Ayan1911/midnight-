@@ -69,13 +69,13 @@ export const Navbar: React.FC<NavbarProps> = ({ wallet, onConnect, onDisconnect 
                 </button>
               )}
             </>
-          ) : wallet.error === 'LACE_NOT_FOUND' ? (
-            <button className="btn-pill" style={{ background: '#374151', color: '#9ca3af', cursor: 'not-allowed' }} disabled>
-              Lace Wallet Not Detected
+          ) : wallet.error === '1AM_NOT_FOUND' ? (
+            <button className="btn-pill" disabled style={{ background: '#374151', color: '#9ca3af', cursor: 'not-allowed' }}>
+              1am Wallet Not Detected
             </button>
           ) : (
             <button className="btn-pill btn-primary" onClick={onConnect}>
-              Connect Lace Wallet
+              Connect 1am Wallet
             </button>
           )}
         </div>

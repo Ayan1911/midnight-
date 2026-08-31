@@ -60,6 +60,6 @@ describe('VotingStation Component', () => {
       />
     );
 
-    expect(screen.getByText('Connect Lace Wallet to Vote')).toBeDisabled();
+    expect(screen.getByText('Connect 1am Wallet to Vote')).toBeDisabled();
   });
 });

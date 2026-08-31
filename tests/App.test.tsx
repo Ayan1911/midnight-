@@ -15,7 +15,7 @@ describe('Midnight Private Voting dApp (App Component)', () => {
     expect(screen.getByText('Midnight Voting')).toBeInTheDocument();
     expect(screen.getByText('Preprod')).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByText('Lace Wallet Not Detected')).toBeInTheDocument();
+      expect(screen.getByText('1am Wallet Not Detected')).toBeInTheDocument();
     });
   });
 
@@ -33,10 +33,10 @@ describe('Midnight Private Voting dApp (App Component)', () => {
     expect(betaElements.length).toBeGreaterThan(0);
   });
 
-  it('renders headless resilience fallback when Lace is missing', async () => {
+  it('renders headless resilience fallback when 1am is missing', async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getByText('Lace Wallet Not Detected')).toBeInTheDocument();
+      expect(screen.getByText('1am Wallet Not Detected')).toBeInTheDocument();
     });
   });
 
@@ -45,6 +45,6 @@ describe('Midnight Private Voting dApp (App Component)', () => {
     expect(screen.getByText('Zero-Knowledge Proofs')).toBeInTheDocument();
     expect(screen.getByText('Selective Disclosure')).toBeInTheDocument();
     expect(screen.getByText('Midnight Preprod')).toBeInTheDocument();
-    expect(screen.getByText('Lace Beta Wallet')).toBeInTheDocument();
+    expect(screen.getByText('1am Wallet')).toBeInTheDocument();
   });
 });
