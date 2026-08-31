@@ -1,4 +1,4 @@
-import { createCircuitContext } from '@midnight-ntwrk/compact-runtime';
+import { createCircuitContext, createConstructorContext } from '@midnight-ntwrk/compact-runtime';
 import { Contract } from '../../managed/contract/index.js';
 
 export async function attachContract(providers: any, contractAddress: string) {
@@ -21,14 +21,13 @@ export async function attachContract(providers: any, contractAddress: string) {
           getVoterSecret: () => witnessObj.getVoterSecret()
         });
 
+        const initCtx = createConstructorContext({}, { bytes: new Uint8Array(32) } as any);
+
         const context = createCircuitContext(
           'castVote',
           { bytes: new Uint8Array(32) } as any,
           { bytes: new Uint8Array(32) } as any,
-          (instance as any).initialState({ 
-            initialPrivateState: {},
-            initialZswapLocalState: {} 
-          }).state,
+          (instance as any).initialState(initCtx).currentContractState,
           {}
         );
 
