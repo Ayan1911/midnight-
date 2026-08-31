@@ -65,6 +65,28 @@ export class MidnightWalletService {
     }
   }
 
+  /**
+   * Ensures an active, fresh connection handle exists to prevent stale port disconnects.
+   */
+  public async ensureConnected(): Promise<DAppConnectorWalletAPI> {
+    if (this.api) {
+      return this.api;
+    }
+    const state = await this.connect();
+    if (!this.api || !state.connected) {
+      throw new Error('1AM Wallet is not connected. Please connect your wallet before proceeding.');
+    }
+    return this.api;
+  }
+
+  /**
+   * Checks whether the 1AM extension injection is present in the current browser window.
+   */
+  public is1AMPresent(): boolean {
+    const midnight = (window as unknown as { midnight?: { '1am'?: unknown } })?.midnight;
+    return Boolean(midnight?.['1am']);
+  }
+
   /** Alias for connect */
   public async connectLace(): Promise<WalletState> {
     return this.connect();

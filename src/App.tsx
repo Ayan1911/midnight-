@@ -43,6 +43,8 @@ export default function App() {
   ]);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txStatus, setTxStatus] = useState<'pending' | 'confirmed'>('pending');
+  const [walletError, setWalletError] = useState<{ message: string; isPopupBlocked: boolean } | null>(null);
+  const [lastVoteParams, setLastVoteParams] = useState<{ candidateId: number; voterSecret: string } | null>(null);
 
   const addLog = (text: string, type: 'info' | 'success' | 'warn' = 'info') => {
     setLogs((prev) => [...prev, { timestamp: new Date().toLocaleTimeString(), text, type }]);
@@ -66,6 +68,8 @@ export default function App() {
   const handleCastVote = async (candidateId: number, voterSecret: string) => {
     setIsProving(true);
     setTxHash(null);
+    setWalletError(null);
+    setLastVoteParams({ candidateId, voterSecret });
     setTxStatus('pending');
     addLog(`Initiating private ballot for Candidate ${candidateId === 1 ? 'Alpha' : 'Beta'}...`, 'info');
 
@@ -84,7 +88,8 @@ export default function App() {
 
       addLog(`ZK Proof verified on Midnight Preview! TxHash: ${txHash.slice(0, 16)}...`, 'success');
       setTxHash(txHash);
-      setTxStatus('confirmed'); // For MVP, assume confirmed after successful return
+      setTxStatus('confirmed');
+      setWalletError(null);
 
       // Refresh public ledger state
       const state = contractService.getLedgerState();
@@ -92,7 +97,19 @@ export default function App() {
       setTallyB(state.totalVotesB);
       setNullifiers(state.nullifiers);
     } catch (err: any) {
-      addLog(`Execution Failed: ${err.message}`, 'warn');
+      const errMsg = err?.message || 'Transaction submission failed';
+      const isPopupBlocked =
+        errMsg.includes('disconnected') ||
+        errMsg.includes('popup') ||
+        errMsg.includes('closed') ||
+        errMsg.includes('rejected');
+
+      setWalletError({
+        message: errMsg,
+        isPopupBlocked,
+      });
+
+      addLog(`Execution Failed: ${errMsg}`, 'warn');
     } finally {
       setIsProving(false);
     }
@@ -128,7 +145,13 @@ export default function App() {
           />
         </div>
         
-        <TransactionVerification txHash={txHash} status={txStatus} />
+        <TransactionVerification
+          txHash={txHash}
+          status={txStatus}
+          errorMessage={walletError?.message}
+          isPopupBlocked={walletError?.isPopupBlocked}
+          onRetry={lastVoteParams ? () => handleCastVote(lastVoteParams.candidateId, lastVoteParams.voterSecret) : undefined}
+        />
 
         <ProofConsole logs={logs} />
       </section>

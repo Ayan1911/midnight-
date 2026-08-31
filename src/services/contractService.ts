@@ -118,9 +118,13 @@ export class ContractService {
   }
 
   private async initProviders() {
-    const laceApi = walletConnector.getApi();
+    let laceApi = walletConnector.getApi();
     if (!laceApi) {
-      throw new Error('1AM Wallet is not connected. You must connect your wallet before casting a vote.');
+      const state = await walletConnector.connect();
+      laceApi = walletConnector.getApi();
+      if (!laceApi || !state.connected) {
+        throw new Error('1AM Wallet is not connected. You must connect your wallet before casting a vote.');
+      }
     }
 
     const providers = {
@@ -133,17 +137,37 @@ export class ContractService {
         return {
           ...baseProvider,
           submitTx: async (tx: any) => {
-            if (typeof baseProvider.submitTx === 'function') {
-              return baseProvider.submitTx(tx);
+            try {
+              if (typeof baseProvider.submitTx === 'function') {
+                return await baseProvider.submitTx(tx);
+              }
+              if (typeof (laceApi as any).submitTx === 'function') {
+                return await (laceApi as any).submitTx(tx);
+              }
+              // Some DApp connectors expose it as submitTransaction
+              if (typeof (laceApi as any).submitTransaction === 'function') {
+                return await (laceApi as any).submitTransaction(tx);
+              }
+              if (typeof (laceApi as any).signTx === 'function') {
+                const signed = await (laceApi as any).signTx(tx);
+                if (typeof (laceApi as any).submitTx === 'function') {
+                  return await (laceApi as any).submitTx(signed);
+                }
+                return signed;
+              }
+              throw new Error("Wallet provider not found or does not support submitTx");
+            } catch (err: any) {
+              const errMsg = err?.message || String(err);
+              if (
+                errMsg.includes('disconnected') ||
+                errMsg.includes('popup') ||
+                errMsg.includes('closed') ||
+                errMsg.includes('rejected')
+              ) {
+                throw new Error(`Wallet UI disconnected: Signature prompt was closed or suppressed by browser popup blocker.`);
+              }
+              throw err;
             }
-            if (typeof (laceApi as any).submitTx === 'function') {
-              return (laceApi as any).submitTx(tx);
-            }
-            // Some DApp connectors expose it as submitTransaction
-            if (typeof (laceApi as any).submitTransaction === 'function') {
-              return (laceApi as any).submitTransaction(tx);
-            }
-            throw new Error("Wallet provider not found or does not support submitTx");
           }
         };
       },
@@ -258,11 +282,22 @@ export class ContractService {
       }
     } catch (err: any) {
       console.error("ZK Circuit Execution Failed:", err);
-      // We must fail loudly if real execution fails instead of faking it!
+      const isPopupOrDisconnectError = 
+        err.message?.includes('Wallet UI disconnected') ||
+        err.message?.includes('disconnected') ||
+        err.message?.includes('popup') ||
+        err.message?.includes('closed') ||
+        err.message?.includes('rejected');
+
       steps[1].status = 'error';
-      steps[1].details = err.message || 'Circuit execution failed';
+      steps[1].details = isPopupOrDisconnectError 
+        ? '1AM Wallet popup was suppressed or closed by browser popup blocker.' 
+        : (err.message || 'Circuit execution failed');
       steps[2].status = 'error';
       steps[3].status = 'error';
+      steps[3].details = isPopupOrDisconnectError
+        ? 'Popup Blocked: Check your browser address bar for blocked popups or hidden 1AM extension window.'
+        : (err.message || 'Transaction submission failed');
       onStepUpdate([...steps]);
       throw new Error(`Real On-Chain execution failed: ${err.message}`);
     }
