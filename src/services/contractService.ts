@@ -132,15 +132,11 @@ export class ContractService {
     const paddedSecret = new Uint8Array(32);
     paddedSecret.set(secretBuffer.slice(0, 32));
 
-    const providers = {
-      getPrivateStateProvider: () => (laceApi as any).getPrivateStateProvider?.() || {},
-      getPublicDataProvider: () => (laceApi as any).getPublicDataProvider?.() || {},
-      getProofProvider: () => (laceApi as any).getProofProvider?.() || {},
-      getWalletProvider: () => laceApi,
-    };
-
-    // Instantiate real contract bindings
-    this.contractInstance = new Contract(providers as any);
+    // Instantiate real contract bindings with proper witness callbacks expected by generated Compact code
+    this.contractInstance = new Contract({
+      getVoterSecret: (context: any) => [context?.state || {}, paddedSecret]
+    });
+    
     return paddedSecret;
   }
 
@@ -222,9 +218,10 @@ export class ContractService {
         onStepUpdate([...steps]);
 
         // Trigger 1AM Prover - physically generates ZK proof in extension
-        const tx = await this.contractInstance.circuits.castVote(candidate, {
-          witness: { getVoterSecret: () => witnessSecret }
-        });
+        const tx = await this.contractInstance.circuits.castVote(
+          { originalState: {}, transactionContext: {} as any },
+          BigInt(candidate)
+        );
         
         steps[2].status = 'completed';
         steps[2].details = `ZK-SNARK proof synthesized successfully.`;
