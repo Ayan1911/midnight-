@@ -25,6 +25,7 @@ export default defineConfig({
       '@midnight-ntwrk/compact-runtime',
       '@midnight-ntwrk/midnight-js-contracts',
       '@midnight-ntwrk/midnight-js-network-provider',
+      '@midnightntwrk/onchain-runtime-v4',
       '@midnight-ntwrk/dapp-connector-api',
       '@midnight-ntwrk/dapp-connector-proof-provider'
     ],
