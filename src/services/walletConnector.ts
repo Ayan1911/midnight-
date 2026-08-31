@@ -32,20 +32,20 @@ export class MidnightWalletService {
    * STRICTLY ENFORCES REAL LACE EXTENSION (No mocks).
    */
   public async connect(): Promise<WalletState> {
-    const midnight = (window as unknown as { midnight?: { mnLace?: { enable: () => Promise<DAppConnectorWalletAPI> } } })?.midnight;
+    const midnight = (window as unknown as { midnight?: { mn1am?: { enable: () => Promise<DAppConnectorWalletAPI> } } })?.midnight;
 
-    if (!midnight || !midnight.mnLace) {
+    if (!midnight || !midnight.mn1am) {
       return {
         connected: false,
         address: null,
         network: 'preview',
         isMock: false,
-        error: 'LACE_NOT_FOUND',
+        error: '1AM_NOT_FOUND',
       };
     }
 
     try {
-      this.api = await midnight.mnLace.enable();
+      this.api = await midnight.mn1am.enable();
       // Using standard DApp Connector interface
       const rawAddress = (await (this.api as unknown as { getChangeAddress?: () => Promise<string> }).getChangeAddress?.()) || 'mn_preview...';
       this.connectedAddress = rawAddress;
