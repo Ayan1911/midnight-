@@ -8,10 +8,10 @@ describe('MidnightWalletService SDK Integration', () => {
     expect(service1).toBe(service2);
   });
 
-  it('rejects connection if 1am is not present', async () => {
+  it('rejects connection if Lace is not present', async () => {
     const service = MidnightWalletService.getInstance();
     const result = await service.connect();
     expect(result.connected).toBe(false);
-    expect(result.error).toBe('1AM_NOT_FOUND');
+    expect(result.error).toBe('LACE_NOT_FOUND');
   });
 });

@@ -19,7 +19,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    // Auto-check for 1am presence on mount for headless resilience
+    // Auto-check for Lace presence on mount for headless resilience
     const checkWallet = async () => {
       const walletService = MidnightWalletService.getInstance();
       const state = await walletService.connect();
@@ -46,9 +46,9 @@ export default function App() {
   };
 
   const handleConnectWallet = async () => {
-    addLog('Requesting 1am Wallet connection...', 'info');
+    addLog('Requesting Lace Beta Wallet connection...', 'info');
     const walletService = MidnightWalletService.getInstance();
-    const result = await walletService.connect1am();
+    const result = await walletService.connectLace();
     setWallet(result);
     addLog(`Connected: ${result.address} on ${result.network}`, 'success');
   };

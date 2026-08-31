@@ -7,7 +7,7 @@ declare module '@midnight-ntwrk/dapp-connector-api' {
   }
 
   export interface MidnightDAppConnector {
-    mn1am: {
+    mnLace: {
       enable(): Promise<DAppConnectorWalletAPI>;
       isEnabled(): Promise<boolean>;
     };
@@ -53,7 +53,7 @@ declare module '@midnight-ntwrk/midnight-js-contracts' {
 
 interface Window {
   midnight?: {
-    mn1am?: {
+    mnLace?: {
       enable(): Promise<import('@midnight-ntwrk/dapp-connector-api').DAppConnectorWalletAPI>;
       isEnabled(): Promise<boolean>;
     };

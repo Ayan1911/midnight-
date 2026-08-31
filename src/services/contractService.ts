@@ -118,13 +118,13 @@ export class ContractService {
   }
 
   /**
-   * Initializes the real contract connection using 1am DApp Connector.
-   * Throws an error if 1am is not connected.
+   * Initializes the real contract connection using Lace DApp Connector.
+   * Throws an error if Lace is not connected.
    */
   private async initContractContext(voterSecret: string) {
     const laceApi = walletConnector.getApi();
     if (!laceApi) {
-      throw new Error('1am Wallet is not connected. You must connect your wallet before casting a vote.');
+      throw new Error('Lace Wallet is not connected. You must connect your wallet before casting a vote.');
     }
 
     // Convert secret string into 32 byte array for Compact witness
@@ -145,7 +145,7 @@ export class ContractService {
   }
 
   /**
-   * Executes a private vote circuit and publishes to Midnight Preview via 1am Prover
+   * Executes a private vote circuit and publishes to Midnight Preview via Lace Prover
    * STRICTLY NO MOCKS.
    */
   public async submitVote(
@@ -169,8 +169,8 @@ export class ContractService {
       },
       {
         id: 'lace_prover',
-        title: '3. Building ZK Proof (1am)',
-        description: 'Delegating to 1am Wallet ProofProvider with castVote.prover key (2.8MB)',
+        title: '3. Building ZK Proof (Lace)',
+        description: 'Delegating to Lace Wallet ProofProvider with castVote.prover key (2.8MB)',
         status: 'idle',
       },
       {
@@ -221,7 +221,7 @@ export class ContractService {
         steps[2].timestamp = new Date().toLocaleTimeString();
         onStepUpdate([...steps]);
 
-        // Trigger 1am Prover - physically generates ZK proof in extension
+        // Trigger Lace Prover - physically generates ZK proof in extension
         const tx = await this.contractInstance.circuits.castVote(candidate, {
           witness: { getVoterSecret: () => witnessSecret }
         });
@@ -232,7 +232,7 @@ export class ContractService {
         steps[3].timestamp = new Date().toLocaleTimeString();
         onStepUpdate([...steps]);
         
-        // Wait for user to sign transaction in 1am Wallet popup
+        // Wait for user to sign transaction in Lace Wallet popup
         const txResult = await tx.send();
         txHash = txResult.txHash || txResult.transactionId || txResult.id;
         
@@ -274,7 +274,7 @@ export class ContractService {
     this.persist();
 
     steps[3].status = 'completed';
-    steps[3].details = `Transaction confirmed via 1am Wallet. TxHash: ${truncateHash(txHash, 10, 8)}`;
+    steps[3].details = `Transaction confirmed via Lace Wallet. TxHash: ${truncateHash(txHash, 10, 8)}`;
     onStepUpdate([...steps]);
 
     return { txHash, nullifier };
