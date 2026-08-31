@@ -16,7 +16,8 @@ describe('TransactionVerification Component', () => {
     expect(screen.getByText('Transaction Verification')).toBeInTheDocument();
     expect(screen.getByText(/0x1234567890abcdef/i)).toBeInTheDocument();
     expect(screen.getByText(/✓ Confirmed/i)).toBeInTheDocument();
-    expect(screen.getByText('Verify on Midnight Explorer')).toBeInTheDocument();
+    expect(screen.getByText('Verify on 1AM Explorer')).toBeInTheDocument();
+    expect(screen.getByText('Subscan Explorer')).toBeInTheDocument();
   });
 
   it('renders defensive popup blocker alert when isPopupBlocked is true', () => {

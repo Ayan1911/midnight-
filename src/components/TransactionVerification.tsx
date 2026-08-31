@@ -127,15 +127,26 @@ export const TransactionVerification: React.FC<TransactionVerificationProps> = (
         {txHash}
       </div>
 
-      <a
-        href={`https://explorer.preview.midnight.network/tx/${txHash}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="btn-pill btn-primary"
-        style={{ display: 'inline-block', textDecoration: 'none' }}
-      >
-        Verify on Midnight Explorer
-      </a>
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <a
+          href={`https://explorer.1am.xyz/tx/${txHash}?network=preview`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-pill btn-primary"
+          style={{ display: 'inline-block', textDecoration: 'none' }}
+        >
+          Verify on 1AM Explorer
+        </a>
+        <a
+          href={`https://midnight-preview.subscan.io/extrinsic/${txHash}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-pill"
+          style={{ display: 'inline-block', textDecoration: 'none', background: 'rgba(255, 255, 255, 0.08)', color: '#fff' }}
+        >
+          Subscan Explorer
+        </a>
+      </div>
     </div>
   );
 };

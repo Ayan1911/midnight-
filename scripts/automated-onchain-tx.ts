@@ -90,7 +90,8 @@ export async function executeOnChainTransaction() {
   console.log('====================================================');
   console.log('🎉 ON-CHAIN TRANSACTION CONFIRMED ON MIDNIGHT PREVIEW!');
   console.log(`📦 Transaction Hash: ${confirmedTxHash}`);
-  console.log(`🔍 Midnight Explorer URL: https://explorer.preview.midnight.network/tx/${confirmedTxHash}`);
+  console.log(`🔍 1AM Explorer URL: https://explorer.1am.xyz/tx/${confirmedTxHash}?network=preview`);
+  console.log(`🔗 Subscan Explorer: https://midnight-preview.subscan.io/extrinsic/${confirmedTxHash}`);
   console.log(`🗳️ Registered Nullifier: ${nullifier}`);
   console.log('====================================================');
 
