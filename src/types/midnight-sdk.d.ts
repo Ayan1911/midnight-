@@ -1,9 +1,17 @@
 declare module '@midnight-ntwrk/dapp-connector-api' {
+  export interface DAppConnectorWalletConfiguration {
+    proverServerUri: string;
+    indexerUri?: string;
+    indexerWsUri?: string;
+    networkId?: string;
+  }
+
   export interface DAppConnectorWalletAPI {
     enable(): Promise<DAppConnectorWalletAPI>;
     connect?(network: string): Promise<DAppConnectorWalletAPI>;
     getChangeAddress(): Promise<string>;
     getNetworkId(): Promise<string>;
+    getConfiguration?(): Promise<DAppConnectorWalletConfiguration>;
     balanceUnsealedTransaction(tx: any, newCoins?: any): Promise<any>;
     submitTransaction(tx: any): Promise<string>;
     submitTx?(txData: Uint8Array | string): Promise<string>;
@@ -16,6 +24,10 @@ declare module '@midnight-ntwrk/dapp-connector-api' {
       isEnabled(): Promise<boolean>;
     };
   }
+}
+
+declare module '@midnight-ntwrk/midnight-js-http-client-proof-provider' {
+  export function httpClientProofProvider(proverServerUri: string): import('@midnight-ntwrk/dapp-connector-proof-provider').ProofProvider;
 }
 
 declare module '@midnight-ntwrk/dapp-connector-proof-provider' {

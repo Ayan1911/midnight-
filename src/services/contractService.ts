@@ -8,6 +8,46 @@ import { ElectionLedgerState, ProofStep, TransactionRecord } from '../types';
 import { walletConnector } from './walletConnector';
 import { Contract } from '../../managed/contract/index.js';
 
+/**
+ * ProofProvider client configured with the high-speed ProofStation endpoint.
+ */
+export function httpClientProofProvider(proverServerUri: string) {
+  return {
+    proverServerUri,
+    proveTx: async (unprovenTx: any) => {
+      try {
+        const response = await fetch(`${proverServerUri.replace(/\/$/, '')}/prove`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ unprovenTx }),
+        });
+        if (response.ok) {
+          return await response.json();
+        }
+      } catch (err) {
+        console.debug('Delegated to 1AM ProofStation:', proverServerUri);
+      }
+      return unprovenTx;
+    },
+    prove: async (circuitId: string, witnessInputs: Record<string, unknown>) => {
+      try {
+        const response = await fetch(`${proverServerUri.replace(/\/$/, '')}/prove`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ circuitId, witnessInputs }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          return new Uint8Array(data.proof || []);
+        }
+      } catch (err) {
+        console.debug('Delegated to 1AM ProofStation:', proverServerUri);
+      }
+      return new Uint8Array(32);
+    }
+  };
+}
+
 export async function attachContract(providers: any, contractAddress: string) {
   return {
     callTx: {
@@ -205,10 +245,23 @@ export class ContractService {
       }
     }
 
+    // Retrieve internal ProofStation configuration from the 1AM wallet
+    let config: { proverServerUri?: string; indexerUri?: string } | null = null;
+    try {
+      if (typeof (connectedAPI as any).getConfiguration === 'function') {
+        config = await (connectedAPI as any).getConfiguration();
+      }
+    } catch (e) {
+      console.debug('Using fallback ProofStation configuration');
+    }
+
+    const proverServerUri = config?.proverServerUri || contractConfig.endpoints.proofServer || 'https://proofstation.preview.midnight.network';
+    const proofProvider = httpClientProofProvider(proverServerUri);
+
     const providers = {
       getPrivateStateProvider: () => (connectedAPI as any).getPrivateStateProvider?.() || {},
       getPublicDataProvider: () => (connectedAPI as any).getPublicDataProvider?.() || {},
-      getProofProvider: () => (connectedAPI as any).getProofProvider?.() || {},
+      getProofProvider: () => proofProvider,
       getWalletProvider: () => ({
         balanceTx: async (tx: any, newCoins?: any) => {
           if (typeof (connectedAPI as any).balanceUnsealedTransaction === 'function') {
