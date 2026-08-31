@@ -9,7 +9,7 @@
 > [!IMPORTANT]
 > 🌐 **Live Production dApp URL:** **[https://midnight-three-coral.vercel.app/](https://midnight-three-coral.vercel.app/)**  
 > 🎬 **Video Demo (Loom):** **[Watch Walkthrough on Loom](https://www.loom.com/share/75870d65d6c243e89ce8aab399d30218)**  
-> 🔗 **Midnight Preview Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.preview.midnight.network/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000)  
+> 🔗 **Midnight Preview Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.1am.xyz/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000?network=preview)  
 > ⚡ **CI/CD Workflow Status:** Verified on GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
 
 ---
@@ -20,9 +20,9 @@
 
 ### 1. Real On-Chain Deployment
 * **Target Network:** Midnight Preview Testnet
-* **Deployed Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.preview.midnight.network/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000)
-* **Deployment Transaction Hash:** [`0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c`](https://preview.midnightexplorer.com/tx/0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c)
-* **Confirmed On-Chain Vote Transaction Hash:** [`0x5478738687f1ecd91c35d177c80b0eab97e9a52030162d204322870eb10d3b14`](https://preview.midnightexplorer.com/tx/0x5478738687f1ecd91c35d177c80b0eab97e9a52030162d204322870eb10d3b14)
+* **Deployed Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.1am.xyz/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000?network=preview)
+* **Deployment Transaction Hash:** [`0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c`](https://explorer.1am.xyz/tx/0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c?network=preview)
+* **Confirmed On-Chain Vote Transaction Hash:** [`0x5478738687f1ecd91c35d177c80b0eab97e9a52030162d204322870eb10d3b14`](https://explorer.1am.xyz/tx/0x5478738687f1ecd91c35d177c80b0eab97e9a52030162d204322870eb10d3b14?network=preview)
 * **Deployment Method:** Executed programmatically via `deployContract()` in `scripts/deploy-testnet.ts` using genuine `@midnight-ntwrk/midnight-js-contracts`.
 
 ### 2. Real ZK Transaction Pipeline (Zero Mocks)
@@ -38,7 +38,7 @@ The frontend executes transactions via the complete Midnight SDK lifecycle witho
 **Video Highlights (Per Mentor Request):**
 * **0:00 - Physical Lace Connection:** Demonstrates the extension authorization popup and dynamic address binding.
 * **0:45 - ZK Proof Generation:** Shows the live invocation of the `castVote` smart contract circuit, explicitly triggering the Lace signing popup.
-* **1:30 - Explorer Verification:** Traces the resulting transaction hash directly on the [Midnight Preview Explorer](https://explorer.preview.midnight.network/), proving the smart contract function call was successfully executed and confirmed on-chain.
+* **1:30 - Explorer Verification:** Traces the resulting transaction hash directly on the [1AM Preview Explorer](https://explorer.1am.xyz/?network=preview), proving the smart contract function call was successfully executed and confirmed on-chain.
 
 ---
 
@@ -188,8 +188,8 @@ The dApp is deployed and live for public evaluation:
 ---
 
 ### 2.2 Verifiable Contract Address
-- **On-Chain Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.preview.midnight.network/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000)
-- **Explorer Verification:** The contract address is registered on Midnight Preview GraphQL Indexer and verifiable on the Midnight Block Explorer.
+- **On-Chain Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.1am.xyz/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000?network=preview)
+- **Explorer Verification:** The contract address is registered on Midnight Preview GraphQL Indexer and verifiable on the 1AM Block Explorer.
 
 ---
 
