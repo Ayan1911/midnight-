@@ -127,7 +127,26 @@ export class ContractService {
       getPrivateStateProvider: () => (laceApi as any).getPrivateStateProvider?.() || {},
       getPublicDataProvider: () => (laceApi as any).getPublicDataProvider?.() || {},
       getProofProvider: () => (laceApi as any).getProofProvider?.() || {},
-      getWalletProvider: () => laceApi,
+      getWalletProvider: () => {
+        // Correctly expose the transaction submission capability required by the Midnight SDK
+        const baseProvider = (laceApi as any).getWalletProvider?.() || laceApi;
+        return {
+          ...baseProvider,
+          submitTx: async (tx: any) => {
+            if (typeof baseProvider.submitTx === 'function') {
+              return baseProvider.submitTx(tx);
+            }
+            if (typeof (laceApi as any).submitTx === 'function') {
+              return (laceApi as any).submitTx(tx);
+            }
+            // Some DApp connectors expose it as submitTransaction
+            if (typeof (laceApi as any).submitTransaction === 'function') {
+              return (laceApi as any).submitTransaction(tx);
+            }
+            throw new Error("Wallet provider not found or does not support submitTx");
+          }
+        };
+      },
     };
 
     return providers;
