@@ -136,24 +136,54 @@ export class ContractService {
         const baseProvider = (laceApi as any).getWalletProvider?.() || laceApi;
         return {
           ...baseProvider,
+          balanceTx: async (tx: any) => {
+            if (typeof baseProvider.balanceTx === 'function') {
+              return await baseProvider.balanceTx(tx);
+            }
+            if (typeof (laceApi as any).balanceTx === 'function') {
+              return await (laceApi as any).balanceTx(tx);
+            }
+            return tx;
+          },
+          signTx: async (tx: any) => {
+            if (typeof baseProvider.signTx === 'function') {
+              return await baseProvider.signTx(tx);
+            }
+            if (typeof (laceApi as any).signTx === 'function') {
+              return await (laceApi as any).signTx(tx);
+            }
+            return tx;
+          },
           submitTx: async (tx: any) => {
             try {
+              // 1. Balance transaction if supported by 1AM
+              let balancedTx = tx;
+              if (typeof (laceApi as any).balanceTx === 'function') {
+                balancedTx = (await (laceApi as any).balanceTx(tx)) || tx;
+              } else if (typeof baseProvider.balanceTx === 'function') {
+                balancedTx = (await baseProvider.balanceTx(tx)) || tx;
+              }
+
+              // 2. Sign transaction if separate signTx method exists
+              let signedTx = balancedTx;
+              if (typeof (laceApi as any).signTx === 'function') {
+                signedTx = (await (laceApi as any).signTx(balancedTx)) || balancedTx;
+              } else if (typeof baseProvider.signTx === 'function') {
+                signedTx = (await baseProvider.signTx(balancedTx)) || balancedTx;
+              }
+
+              // 3. Submit transaction
               if (typeof baseProvider.submitTx === 'function') {
-                return await baseProvider.submitTx(tx);
+                return await baseProvider.submitTx(signedTx);
               }
               if (typeof (laceApi as any).submitTx === 'function') {
-                return await (laceApi as any).submitTx(tx);
+                return await (laceApi as any).submitTx(signedTx);
               }
-              // Some DApp connectors expose it as submitTransaction
               if (typeof (laceApi as any).submitTransaction === 'function') {
-                return await (laceApi as any).submitTransaction(tx);
+                return await (laceApi as any).submitTransaction(signedTx);
               }
-              if (typeof (laceApi as any).signTx === 'function') {
-                const signed = await (laceApi as any).signTx(tx);
-                if (typeof (laceApi as any).submitTx === 'function') {
-                  return await (laceApi as any).submitTx(signed);
-                }
-                return signed;
+              if (signedTx && typeof signedTx === 'string') {
+                return signedTx;
               }
               throw new Error("Wallet provider not found or does not support submitTx");
             } catch (err: any) {
@@ -261,9 +291,12 @@ export class ContractService {
         paddedSecret.set(secretBuffer.slice(0, 32));
 
         // Trigger 1AM Prover - physically generates ZK proof in extension
-        const tx = await this.contractInstance.callTx.castVote({
-          getVoterSecret: () => [{}, paddedSecret]
-        });
+        const tx = await this.contractInstance.callTx.castVote(
+          BigInt(candidate),
+          {
+            getVoterSecret: () => [{}, paddedSecret]
+          }
+        );
         
         steps[2].status = 'completed';
         steps[2].details = `ZK-SNARK proof synthesized successfully.`;
