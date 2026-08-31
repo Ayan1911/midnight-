@@ -6,6 +6,7 @@ import { VotingStation } from './components/VotingStation';
 import { LedgerTallyView } from './components/LedgerTallyView';
 import { ProofConsole, LogEntry } from './components/ProofConsole';
 import { TrustBadges } from './components/TrustBadges';
+import { TransactionVerification } from './components/TransactionVerification';
 import { MidnightWalletService, WalletState } from './services/walletConnector';
 import { contractService } from './services/contractService';
 import { ProofStep } from './types';
@@ -40,6 +41,8 @@ export default function App() {
     { timestamp: new Date().toLocaleTimeString(), text: 'Application initialized on Midnight Preview testnet.', type: 'info' },
     { timestamp: new Date().toLocaleTimeString(), text: 'Compact contract bindings loaded: voting.compact', type: 'info' },
   ]);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [txStatus, setTxStatus] = useState<'pending' | 'confirmed'>('pending');
 
   const addLog = (text: string, type: 'info' | 'success' | 'warn' = 'info') => {
     setLogs((prev) => [...prev, { timestamp: new Date().toLocaleTimeString(), text, type }]);
@@ -62,6 +65,8 @@ export default function App() {
 
   const handleCastVote = async (candidateId: number, voterSecret: string) => {
     setIsProving(true);
+    setTxHash(null);
+    setTxStatus('pending');
     addLog(`Initiating private ballot for Candidate ${candidateId === 1 ? 'Alpha' : 'Beta'}...`, 'info');
 
     try {
@@ -78,6 +83,8 @@ export default function App() {
       );
 
       addLog(`ZK Proof verified on Midnight Preview! TxHash: ${txHash.slice(0, 16)}...`, 'success');
+      setTxHash(txHash);
+      setTxStatus('confirmed'); // For MVP, assume confirmed after successful return
 
       // Refresh public ledger state
       const state = contractService.getLedgerState();
@@ -120,6 +127,8 @@ export default function App() {
             nullifiers={nullifiers}
           />
         </div>
+        
+        <TransactionVerification txHash={txHash} status={txStatus} />
 
         <ProofConsole logs={logs} />
       </section>

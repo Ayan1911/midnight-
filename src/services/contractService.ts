@@ -224,13 +224,14 @@ export class ContractService {
         
         steps[2].status = 'completed';
         steps[2].details = `ZK-SNARK proof synthesized successfully.`;
+        // Wait for user to sign transaction in 1AM Wallet popup
         steps[3].status = 'running';
+        steps[3].description = 'Waiting for Wallet Signature... Please approve the transaction in the 1AM extension popup.';
         steps[3].timestamp = new Date().toLocaleTimeString();
         onStepUpdate([...steps]);
-        
-        // Wait for user to sign transaction in 1AM Wallet popup
+
         const txResult = await tx.send ? await tx.send() : tx;
-        txHash = txResult.txHash || txResult.transactionId || txResult.id || '0xSimulatedTxHashForNow';
+        txHash = txResult.txHash || txResult.transactionId || txResult.id;
         
       } else {
         // Fallback safety

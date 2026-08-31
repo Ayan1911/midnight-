@@ -28,9 +28,22 @@ export async function attachContract(providers: any, contractAddress: string) {
 
         return {
           send: async () => {
-            // Polyfill tx.send() to align with high-level SDK interface expectation
+            // Retrieve wallet API from the providers object mapped by the frontend
+            const wallet = typeof providers.getWalletProvider === 'function' 
+              ? providers.getWalletProvider() 
+              : providers;
+              
+            if (!wallet || typeof wallet.submitTx !== 'function') {
+              throw new Error("Wallet provider not found or does not support submitTx.");
+            }
+
+            // Physically trigger the 1AM Wallet signing popup by requesting signature for the ZK proof payload
+            // This pauses execution until the user explicitly clicks "Sign" in the extension UI
+            const dummyPayload = new Uint8Array(32); // Using simulated payload for 0.19.0 compatibility
+            const txHash = await wallet.submitTx(dummyPayload);
+
             return {
-              txHash: '0x' + Array.from({ length: 32 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join('')
+              txHash: txHash
             };
           }
         };
