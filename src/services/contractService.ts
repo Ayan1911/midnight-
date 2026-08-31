@@ -133,7 +133,13 @@ export class ContractService {
   private contractInstance: any = null;
 
   constructor() {
-    const savedState = localStorage.getItem('midnight_preview_ledger');
+    let savedState = null;
+    let savedTxs = null;
+    if (typeof localStorage !== 'undefined') {
+      savedState = localStorage.getItem('midnight_preview_ledger');
+      savedTxs = localStorage.getItem('midnight_preview_txs');
+    }
+
     if (savedState) {
       this.ledgerState = JSON.parse(savedState);
     } else {
@@ -153,15 +159,16 @@ export class ContractService {
       this.persist();
     }
 
-    const savedTxs = localStorage.getItem('midnight_preview_txs');
     if (savedTxs) {
       this.transactions = JSON.parse(savedTxs);
     }
   }
 
   private persist() {
-    localStorage.setItem('midnight_preview_ledger', JSON.stringify(this.ledgerState));
-    localStorage.setItem('midnight_preview_txs', JSON.stringify(this.transactions));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('midnight_preview_ledger', JSON.stringify(this.ledgerState));
+      localStorage.setItem('midnight_preview_txs', JSON.stringify(this.transactions));
+    }
     this.notify();
   }
 

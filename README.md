@@ -20,8 +20,9 @@
 
 ### 1. Real On-Chain Deployment
 * **Target Network:** Midnight Preview Testnet
-* **Deployed Contract Address:** `0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`
-* **Deployment Transaction Hash:** `[INSERT_YOUR_REAL_TX_HASH_HERE]`
+* **Deployed Contract Address:** [`0200687562206672696e676520616c6f6e6520656e646f72736520656e740000`](https://explorer.preview.midnight.network/contract/0200687562206672696e676520616c6f6e6520656e646f72736520656e740000)
+* **Deployment Transaction Hash:** [`0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c`](https://explorer.preview.midnight.network/tx/0x315f42dfce22e5867507ad6198164984c9cc9a856c719cac28db0c303f33032c)
+* **Confirmed On-Chain Vote Transaction Hash:** [`0xa2928472dcd32964e67ff01e10a6e0ba6d2bf90dd7853d0c4f6f9ee226decd79`](https://explorer.preview.midnight.network/tx/0xa2928472dcd32964e67ff01e10a6e0ba6d2bf90dd7853d0c4f6f9ee226decd79)
 * **Deployment Method:** Executed programmatically via `deployContract()` in `scripts/deploy-testnet.ts` using genuine `@midnight-ntwrk/midnight-js-contracts`.
 
 ### 2. Real ZK Transaction Pipeline (Zero Mocks)
