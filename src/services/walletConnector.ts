@@ -32,9 +32,11 @@ export class MidnightWalletService {
    * STRICTLY ENFORCES REAL LACE EXTENSION (No mocks).
    */
   public async connect(): Promise<WalletState> {
-    const midnight = (window as unknown as { midnight?: { mn1am?: { enable: () => Promise<DAppConnectorWalletAPI> } } })?.midnight;
+    const midnight = (window as unknown as { midnight?: { '1am'?: { enable: () => Promise<DAppConnectorWalletAPI>, connect?: (n: string) => Promise<DAppConnectorWalletAPI> } } })?.midnight;
 
-    if (!midnight || !midnight.mn1am) {
+    const wallet = midnight?.['1am'];
+    if (!wallet) {
+      console.warn("1AM Wallet not found on window.midnight['1am']");
       return {
         connected: false,
         address: null,
@@ -45,7 +47,8 @@ export class MidnightWalletService {
     }
 
     try {
-      this.api = await midnight.mn1am.enable();
+      // 1AM supports its own specific connect method, but fallback to enable() if it acts as a standard connector
+      this.api = wallet.connect ? await wallet.connect('preview') : await wallet.enable();
       // Using standard DApp Connector interface
       const rawAddress = (await (this.api as unknown as { getChangeAddress?: () => Promise<string> }).getChangeAddress?.()) || 'mn_preview...';
       this.connectedAddress = rawAddress;
@@ -57,8 +60,8 @@ export class MidnightWalletService {
         isMock: false,
       };
     } catch (err) {
-      console.error('Failed to connect to Lace Wallet:', err);
-      throw new Error('Lace Wallet connection was rejected or failed.');
+      console.error('Failed to connect to 1AM Wallet:', err);
+      throw new Error('1AM Wallet connection was rejected or failed.');
     }
   }
 
