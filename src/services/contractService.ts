@@ -7,6 +7,7 @@ import { deriveNullifierHash, truncateHash } from './cryptoUtils';
 import { ElectionLedgerState, ProofStep, TransactionRecord } from '../types';
 import { walletConnector } from './walletConnector';
 import { attachContract } from '@midnight-ntwrk/midnight-js-contracts';
+import { sanitizePostMessagePayload } from './midnight-polyfill';
 
 export class ContractService {
   private ledgerState: ElectionLedgerState;
@@ -137,53 +138,61 @@ export class ContractService {
         return {
           ...baseProvider,
           balanceTx: async (tx: any) => {
+            const cleanTx = sanitizePostMessagePayload(tx);
             if (typeof baseProvider.balanceTx === 'function') {
-              return await baseProvider.balanceTx(tx);
+              return await baseProvider.balanceTx(cleanTx);
             }
             if (typeof (laceApi as any).balanceTx === 'function') {
-              return await (laceApi as any).balanceTx(tx);
+              return await (laceApi as any).balanceTx(cleanTx);
             }
-            return tx;
+            return cleanTx;
           },
           signTx: async (tx: any) => {
+            const cleanTx = sanitizePostMessagePayload(tx);
             if (typeof baseProvider.signTx === 'function') {
-              return await baseProvider.signTx(tx);
+              return await baseProvider.signTx(cleanTx);
             }
             if (typeof (laceApi as any).signTx === 'function') {
-              return await (laceApi as any).signTx(tx);
+              return await (laceApi as any).signTx(cleanTx);
             }
-            return tx;
+            return cleanTx;
           },
           submitTx: async (tx: any) => {
             try {
+              const cleanTx = sanitizePostMessagePayload(tx);
+
               // 1. Balance transaction if supported by 1AM
-              let balancedTx = tx;
+              let balancedTx = cleanTx;
               if (typeof (laceApi as any).balanceTx === 'function') {
-                balancedTx = (await (laceApi as any).balanceTx(tx)) || tx;
+                balancedTx = (await (laceApi as any).balanceTx(cleanTx)) || cleanTx;
               } else if (typeof baseProvider.balanceTx === 'function') {
-                balancedTx = (await baseProvider.balanceTx(tx)) || tx;
+                balancedTx = (await baseProvider.balanceTx(cleanTx)) || cleanTx;
               }
 
+              const cleanBalanced = sanitizePostMessagePayload(balancedTx);
+
               // 2. Sign transaction if separate signTx method exists
-              let signedTx = balancedTx;
+              let signedTx = cleanBalanced;
               if (typeof (laceApi as any).signTx === 'function') {
-                signedTx = (await (laceApi as any).signTx(balancedTx)) || balancedTx;
+                signedTx = (await (laceApi as any).signTx(cleanBalanced)) || cleanBalanced;
               } else if (typeof baseProvider.signTx === 'function') {
-                signedTx = (await baseProvider.signTx(balancedTx)) || balancedTx;
+                signedTx = (await baseProvider.signTx(cleanBalanced)) || cleanBalanced;
               }
+
+              const cleanSigned = sanitizePostMessagePayload(signedTx);
 
               // 3. Submit transaction
               if (typeof baseProvider.submitTx === 'function') {
-                return await baseProvider.submitTx(signedTx);
+                return await baseProvider.submitTx(cleanSigned);
               }
               if (typeof (laceApi as any).submitTx === 'function') {
-                return await (laceApi as any).submitTx(signedTx);
+                return await (laceApi as any).submitTx(cleanSigned);
               }
               if (typeof (laceApi as any).submitTransaction === 'function') {
-                return await (laceApi as any).submitTransaction(signedTx);
+                return await (laceApi as any).submitTransaction(cleanSigned);
               }
-              if (signedTx && typeof signedTx === 'string') {
-                return signedTx;
+              if (cleanSigned && typeof cleanSigned === 'string') {
+                return cleanSigned;
               }
               throw new Error("Wallet provider not found or does not support submitTx");
             } catch (err: any) {

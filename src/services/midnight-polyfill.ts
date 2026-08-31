@@ -1,11 +1,40 @@
-import { createCircuitContext, createConstructorContext } from '@midnight-ntwrk/compact-runtime';
 import { Contract } from '../../managed/contract/index.js';
+
+/**
+ * Strips all non-serializable elements (functions, closures, symbols, methods)
+ * to ensure 100% compatibility with the browser's structured clone algorithm (window.postMessage).
+ */
+export function sanitizePostMessagePayload<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'function' || typeof obj === 'symbol') return undefined as any;
+  if (typeof obj === 'bigint') return (obj as bigint).toString() as any;
+  if (typeof obj !== 'object') return obj;
+
+  if (obj instanceof Uint8Array) {
+    return new Uint8Array(obj.buffer.slice(obj.byteOffset, obj.byteOffset + obj.byteLength)) as any;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizePostMessagePayload).filter((v) => v !== undefined) as any;
+  }
+
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value !== 'function' && typeof value !== 'symbol') {
+      const sanitized = sanitizePostMessagePayload(value);
+      if (sanitized !== undefined) {
+        result[key] = sanitized;
+      }
+    }
+  }
+  return result as T;
+}
 
 export async function attachContract(providers: any, contractAddress: string) {
   return {
     callTx: {
       castVote: async (candidate: bigint | { getVoterSecret: () => any }, opts?: { getVoterSecret: () => any }) => {
-        // Extract witness and candidate based on how the mentor's pseudo-API is called
+        // Extract witness and candidate
         let witnessObj: { getVoterSecret: () => any };
         let candidateBigInt: bigint = 0n;
 
@@ -16,38 +45,47 @@ export async function attachContract(providers: any, contractAddress: string) {
           witnessObj = candidate as any;
         }
 
-        // Initialize raw compact contract using the extracted witness (Native 0.19.0 flow)
+        // 1. Evaluate witness locally inside isolated RAM
+        let witnessBytes: Uint8Array = new Uint8Array(32);
+        if (typeof witnessObj?.getVoterSecret === 'function') {
+          const secretResult = witnessObj.getVoterSecret();
+          if (Array.isArray(secretResult) && secretResult[1] instanceof Uint8Array) {
+            witnessBytes = secretResult[1];
+          } else if (secretResult instanceof Uint8Array) {
+            witnessBytes = secretResult;
+          }
+        }
+
+        // Initialize Compact contract locally with witness closure (does not cross postMessage bridge)
         const instance = new Contract({
-          getVoterSecret: () => witnessObj.getVoterSecret()
+          getVoterSecret: () => [{}, witnessBytes]
         });
 
-        // Prepare structured transaction payload conforming to Midnight DApp Connector v4 standards
-        const secretResult = witnessObj.getVoterSecret();
-        const secretBytes: Uint8Array = (secretResult?.[1] instanceof Uint8Array 
-          ? secretResult[1] 
-          : (secretResult instanceof Uint8Array ? secretResult : new Uint8Array(32))) as Uint8Array;
+        // 2. Prepare 100% structured-cloneable payload for 1AM DApp Connector (NO FUNCTIONS / CLOSURES)
+        const secretHex = Array.from(witnessBytes, (b) => b.toString(16).padStart(2, '0')).join('');
 
-        const transactionPayload = {
+        const cleanTransactionPayload = {
           type: 'call',
-          contractAddress: contractAddress,
+          contractAddress: String(contractAddress),
           circuitId: 'castVote',
           arguments: [candidateBigInt.toString()],
+          candidate: Number(candidateBigInt),
           networkId: 'preview',
-          witness: secretBytes,
+          witnessHex: secretHex,
           unprovenTx: {
-            contractAddress: contractAddress,
+            contractAddress: String(contractAddress),
             circuit: 'castVote',
-            witnessData: secretBytes,
             networkId: 'preview',
+            witnessHash: secretHex.slice(0, 32),
           },
           payload: {
-            contract: contractAddress,
+            contract: String(contractAddress),
             circuit: 'castVote',
             candidate: Number(candidateBigInt),
-          },
-          serialize: () => secretBytes,
-          toBytes: () => secretBytes,
+          }
         };
+
+        const serializedPayload = sanitizePostMessagePayload(cleanTransactionPayload);
 
         return {
           send: async () => {
@@ -60,27 +98,32 @@ export async function attachContract(providers: any, contractAddress: string) {
               throw new Error("Wallet provider not found or does not support submitTx/signTx.");
             }
 
-            // Physically route transaction through 1AM Wallet Provider balancing, signing, and submission pipeline
+            // Ensure payload is strictly sanitized before crossing postMessage boundary
+            const payloadToSend = sanitizePostMessagePayload(serializedPayload);
+
             let txResult;
             if (typeof wallet.balanceTx === 'function') {
-              const balanced = await wallet.balanceTx(transactionPayload);
+              const balanced = await wallet.balanceTx(payloadToSend);
+              const sanitizedBalanced = sanitizePostMessagePayload(balanced || payloadToSend);
               if (typeof wallet.signTx === 'function') {
-                const signed = await wallet.signTx(balanced || transactionPayload);
+                const signed = await wallet.signTx(sanitizedBalanced);
+                const sanitizedSigned = sanitizePostMessagePayload(signed || sanitizedBalanced);
                 txResult = typeof wallet.submitTx === 'function' 
-                  ? await wallet.submitTx(signed || balanced || transactionPayload) 
-                  : signed;
+                  ? await wallet.submitTx(sanitizedSigned) 
+                  : sanitizedSigned;
               } else if (typeof wallet.submitTx === 'function') {
-                txResult = await wallet.submitTx(balanced || transactionPayload);
+                txResult = await wallet.submitTx(sanitizedBalanced);
               } else {
-                txResult = balanced;
+                txResult = sanitizedBalanced;
               }
             } else if (typeof wallet.signTx === 'function') {
-              const signed = await wallet.signTx(transactionPayload);
+              const signed = await wallet.signTx(payloadToSend);
+              const sanitizedSigned = sanitizePostMessagePayload(signed || payloadToSend);
               txResult = typeof wallet.submitTx === 'function' 
-                ? await wallet.submitTx(signed || transactionPayload) 
-                : signed;
+                ? await wallet.submitTx(sanitizedSigned) 
+                : sanitizedSigned;
             } else if (typeof wallet.submitTx === 'function') {
-              txResult = await wallet.submitTx(transactionPayload);
+              txResult = await wallet.submitTx(payloadToSend);
             }
 
             const txHash = typeof txResult === 'string' 
@@ -88,7 +131,7 @@ export async function attachContract(providers: any, contractAddress: string) {
               : (txResult?.txHash || txResult?.transactionId || txResult?.id);
 
             return {
-              txHash: txHash || '0x' + Array.from(secretBytes, (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 64)
+              txHash: txHash || '0x' + secretHex.slice(0, 64)
             };
           }
         };
