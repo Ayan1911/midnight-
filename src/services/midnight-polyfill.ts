@@ -25,7 +25,10 @@ export async function attachContract(providers: any, contractAddress: string) {
           'castVote',
           { bytes: new Uint8Array(32) } as any,
           { bytes: new Uint8Array(32) } as any,
-          (instance as any).initialState({ initialPrivateState: {} }).state,
+          (instance as any).initialState({ 
+            initialPrivateState: {},
+            initialZswapLocalState: {} 
+          }).state,
           {}
         );
 
