@@ -7,6 +7,8 @@ import { deriveNullifierHash, truncateHash } from './cryptoUtils';
 import { ElectionLedgerState, ProofStep, TransactionRecord } from '../types';
 import { walletConnector } from './walletConnector';
 import { Contract } from '../../managed/contract/index.js';
+// @ts-ignore: TS module resolution for bundler may not resolve findDeployedContract
+import { findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 
 /**
  * ProofProvider client configured with the high-speed ProofStation endpoint.
@@ -44,84 +46,6 @@ export function httpClientProofProvider(proverServerUri: string) {
         console.debug('Delegated to 1AM ProofStation:', proverServerUri);
       }
       return new Uint8Array(32);
-    }
-  };
-}
-
-export async function attachContract(providers: any, contractAddress: string) {
-  return {
-    callTx: {
-      castVote: async (candidate: bigint | number, opts: { getVoterSecret: () => any }) => {
-        const candidateBigInt = BigInt(candidate);
-
-        // Initialize Compact contract locally with witness bindings
-        const contractInstance = new Contract({
-          getVoterSecret: () => opts.getVoterSecret()
-        });
-
-        return {
-          send: async () => {
-            const walletProvider = typeof providers.getWalletProvider === 'function'
-              ? providers.getWalletProvider()
-              : providers.walletProvider || providers;
-
-            if (!walletProvider) {
-              throw new Error('Wallet provider is not available.');
-            }
-
-            const secretResult = opts.getVoterSecret();
-            const secretBytes: Uint8Array = (secretResult?.[1] instanceof Uint8Array
-              ? secretResult[1]
-              : (secretResult instanceof Uint8Array ? secretResult : new Uint8Array(32))) as Uint8Array;
-
-            const secretHex = Array.from(secretBytes, (b) => b.toString(16).padStart(2, '0')).join('');
-
-            const unsealedTx = {
-              contractAddress: String(contractAddress),
-              circuitId: 'castVote',
-              arguments: [candidateBigInt.toString()],
-              candidate: Number(candidateBigInt),
-              networkId: 'preview',
-              witnessHex: secretHex,
-              unprovenTx: {
-                contractAddress: String(contractAddress),
-                circuit: 'castVote',
-                networkId: 'preview',
-                witnessHash: secretHex.slice(0, 32),
-              },
-              payload: {
-                contract: String(contractAddress),
-                circuit: 'castVote',
-                candidate: Number(candidateBigInt),
-              }
-            };
-
-            // 1. Balance via native balanceUnsealedTransaction mapping
-            let balancedTx = unsealedTx;
-            if (typeof walletProvider.balanceTx === 'function') {
-              balancedTx = (await walletProvider.balanceTx(unsealedTx)) || unsealedTx;
-            }
-
-            // 2. Submit via native submitTransaction mapping (prompts 1AM signature popup)
-            let txHash: string;
-            if (typeof walletProvider.submitTx === 'function') {
-              txHash = await walletProvider.submitTx(balancedTx);
-            } else if (typeof walletProvider.submitTransaction === 'function') {
-              txHash = await walletProvider.submitTransaction(balancedTx);
-            } else {
-              throw new Error('Wallet provider does not support submitTransaction.');
-            }
-
-            const cleanTxHash = typeof txHash === 'string'
-              ? txHash
-              : ((txHash as any)?.txHash || (txHash as any)?.transactionId || String(txHash));
-
-            return {
-              txHash: cleanTxHash || '0x' + secretHex.slice(0, 64)
-            };
-          }
-        };
-      }
     }
   };
 }
@@ -269,6 +193,9 @@ export class ContractService {
       getPrivateStateProvider: () => (connectedAPI as any).getPrivateStateProvider?.() || {},
       getPublicDataProvider: () => (connectedAPI as any).getPublicDataProvider?.() || {},
       getProofProvider: () => proofProvider,
+      getZkConfigProvider: () => (connectedAPI as any).getZkConfigProvider?.() || ((circuitId: string) => {
+         throw new Error("ZK Config Provider not implemented by wallet");
+      }),
       getWalletProvider: () => ({
         balanceTx: async (tx: any, newCoins?: any) => {
           if (typeof (connectedAPI as any).balanceUnsealedTransaction === 'function') {
@@ -375,9 +302,23 @@ export class ContractService {
     try {
       const providers = await this.initProviders();
 
-      this.contractInstance = await attachContract(
-        providers as any,
-        contractConfig.contractAddress
+      this.contractInstance = await findDeployedContract(
+        providers,
+        {
+          privateStateProvider: providers.getPrivateStateProvider(),
+          zkConfigProvider: providers.getZkConfigProvider ? providers.getZkConfigProvider() : undefined,
+          publicDataProvider: providers.getPublicDataProvider(),
+        },
+        contractConfig.contractAddress,
+        Contract,
+        {
+          getVoterSecret: () => {
+            const secretBuffer = new TextEncoder().encode(voterSecret);
+            const paddedSecret = new Uint8Array(32);
+            paddedSecret.set(secretBuffer.slice(0, 32));
+            return [{}, paddedSecret] as [any, Uint8Array];
+          },
+        }
       );
 
       if (this.contractInstance?.callTx?.castVote) {
@@ -387,17 +328,9 @@ export class ContractService {
         steps[2].timestamp = new Date().toLocaleTimeString();
         onStepUpdate([...steps]);
 
-        // Convert secret string into 32 byte array for Compact witness
-        const secretBuffer = new TextEncoder().encode(voterSecret);
-        const paddedSecret = new Uint8Array(32);
-        paddedSecret.set(secretBuffer.slice(0, 32));
-
         // Trigger 1AM Prover - physically generates ZK proof in extension
         const tx = await this.contractInstance.callTx.castVote(
-          BigInt(candidate),
-          {
-            getVoterSecret: () => [{}, paddedSecret]
-          }
+          BigInt(candidate)
         );
 
         steps[2].status = 'completed';
@@ -408,8 +341,8 @@ export class ContractService {
         steps[3].timestamp = new Date().toLocaleTimeString();
         onStepUpdate([...steps]);
 
-        const txResult = await tx.send ? await tx.send() : tx;
-        txHash = txResult.txHash || txResult.transactionId || txResult.id;
+        const txResult = await tx.send();
+        txHash = txResult.txHash || txResult.transactionId || txResult.id || txHash;
 
       } else {
         // Fallback safety
