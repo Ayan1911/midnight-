@@ -167,6 +167,16 @@ export class ContractService {
   }
 
   private async initProviders() {
+    try {
+      // Explicitly set network ID to preview as required by Midnight SDK
+      const providerPkg = await import('@midnight-ntwrk/midnight-js-network-id').catch(() => null);
+      if (providerPkg && typeof (providerPkg as any).setNetworkId === 'function') {
+        (providerPkg as any).setNetworkId('preview');
+      }
+    } catch (e) {
+      console.debug('setNetworkId skipped or not available.');
+    }
+
     let connectedAPI = walletConnector.getApi();
     if (!connectedAPI) {
       const state = await walletConnector.connect();

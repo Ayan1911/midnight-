@@ -42,7 +42,7 @@ export async function deployVotingContract(
 
   try {
     // Attempt environment based configuration if setNetworkId exists
-    const providerPkg = await import('@midnight-ntwrk/midnight-js-network-provider').catch(() => null);
+    const providerPkg = await import('@midnight-ntwrk/midnight-js-network-id').catch(() => null);
     if (providerPkg && typeof (providerPkg as any).setNetworkId === 'function') {
       (providerPkg as any).setNetworkId(targetNetwork);
     }
